@@ -119,6 +119,8 @@ class NumberGame {
 
     // self explanatory
     winner() {
+        playerPointsElement.innerHTML = this.humanScore;
+        opponentPointsElement.innerHTML = this.computerScore;
         if (this.humanScore > this.computerScore) {
             outputElement.innerHTML = "You won!";
         } else if (this.computerScore > this.humanScore) { 
