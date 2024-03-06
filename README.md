@@ -4,8 +4,8 @@
 # Papildu prasības programmatūrai
 Spēles sākumā cilvēks-spēlētājs norāda spēlē izmantojamas skaitļu virknes garumu, kas var būt diapazonā no 15 līdz 25 skaitļiem. Spēles programmatūra gadījuma ceļā saģenerē skaitļu virkni atbilstoši uzdotajam garumam, tajā iekļaujot skaitļus no 1 līdz 9.
 
-# Spēles apraksts
-Spēles sākumā ir dota ģenerētā skaitļu virkne. Katram spēlētājam ir 0 punktu. Spēlētāji izpilda gājienus secīgi. Gājiena laikā spēlētājs aizvieto jebkuru skaitļu pāri (divus blakus stāvošus skaitļus), pamatojoties uz šādiem principiem:
+Spēles sākumā ir dota ģenerētā skaitļu virkne. Katram spēlētājam ir 0 punktu. Spēlētāji izpilda gājienus secīgi. Gājiena laikā spēlētājs aizvieto jebkuru skaitļu pāri (divus blakus stāvošus skaitļus), pamatojoties uz šādiem principiem:  
+
 •	ja divu blakus stāvošu skaitļu summa ir lielāka par 7, tad skaitļu pāri aizvieto ar 1 un savam punktu skaitam pieskaita 2 punktus;
 •	ja divu blakus stāvošu skaitļu summa ir mazāka par 7, tad skaitļu pāri aizvieto ar 3 un no pretinieka punktu skaita atņem 1 punktu;
 •	ja divu blakus stāvošu skaitļu summa ir vienāda ar 7, tad skaitļu pāri aizvieto ar 2 un no sava punktu skaita atņem 1 punktu.
