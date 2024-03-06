@@ -41,7 +41,7 @@ class NumberGame {
         let skVirkneTxt = "";
         for (let i = 0; i < arrayLength; i++) {
             let randomelem = Math.floor(Math.random() * 9) + 1;
-            skVirkneTxt = skVirkneTxt + "   " + randomelem + "(" + i + ")";
+            skVirkneTxt += " " + randomelem + "<span class=\"mini-font\"><i>" + i + "</i></span>&nbsp;&nbsp;";
             this.values.push(randomelem);
         }
         valuesArrayElement.innerHTML = skVirkneTxt;
@@ -55,7 +55,7 @@ class NumberGame {
             playerPointsElement.innerHTML = this.humanScore;
             opponentPointsElement.innerHTML = this.computerScore;
                 for (let i=0; i<this.values.length; i++) {
-                    valueString += this.values[i] + "(" + i + ")" + " ";
+                    valueString += this.values[i] + "<span class=\"mini-font\"><i>" + i + "</i></span>&nbsp;&nbsp;";
                 }
                 valuesArrayElement.innerHTML = valueString; 
             if (this.currentPlayer == 0) { // spēlētāja kārta (cilvēks reprezentē 0, dators- 1)
