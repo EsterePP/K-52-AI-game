@@ -6,7 +6,8 @@ class NumberGame {
       this.values = [];
     }
 
-    // Lietotājs ievada virknes garumu
+    // Lietotājs ievada virknes garumu. Šis neizskatās smuki tikai tāpēc, ka javascript īsti nav domāts command
+    // line lietām, mūsu beigu kodā nekas tāds nebūs
     init() {
         const readline = require('readline');
         const rl = readline.createInterface({
