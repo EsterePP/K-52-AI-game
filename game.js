@@ -14,8 +14,9 @@ class NumberGame {
         output: process.stdout
         });
     
-        rl.question("Enter length of the number string (15-25): ", input => {
-          const arrayLength = parseInt(input.trim(), 10); // šeit
+        // Pagaidām var ievadīt pilnīgi jebkādu garumu
+        rl.question("Enter length of the number string : ", input => {
+          const arrayLength = parseInt(input.trim());
           this.generateValues(arrayLength);
           rl.close();
           this.startGame();
@@ -29,18 +30,20 @@ class NumberGame {
         }
     }
 
-    // pati spēles loģika ("async" te ir tikai tāpēc, ka javascript nav šiti domāts šādām lietām, tas nav nekas būtisks)
+    // pati spēles loģika ("async" te ir tikai tāpēc, ka javascript īsti nav domāts command line lietām, tas nav nekas būtisks)
     async startGame()  {
         while (this.values.length > 1) { // spēle turpinās līdz values masīvā vairs nav skaitļu, ko saskaitīt
             let valueString = ""; // izvada masīvu kā skaitļu virkni, lai spēlētājs varētu izvēlēties, kurus skaitļus 
             // var saskaitīt. Ieliekot šo iekš while cikla var arī redzēt kā izmainas masīvs pēc sava gājiena.
+            console.log("Your current score: " + this.humanScore);
+            console.log("Your opponent's score: " + this.computerScore);
                 for (let i=0; i<this.values.length; i++) {
                     valueString += this.values[i] + "(" + i + ")" + " ";
                 }
                 console.log(valueString); 
             if (this.currentPlayer == 0) { // spēlētāja kārta (cilvēks reprezentē 0, dators- 1)
                 try {
-                    const {valueOne, valueTwo} = await this.humanMove(); // cilvēks veic savu gājienu
+                    const {valueOne, valueTwo} = await this.humanMove(); // cilvēks veic savu gājienu, metodes var apskatīt zemāk
                     let sum = this.values[valueOne] + this.values[valueTwo]; 
                     this.editArray(valueOne, sum); // balstoties uz saskaitīto skaitļu summas veicam izmaiņas virknē
                     this.points(sum, this.currentPlayer); // saskaitām punktus
@@ -114,10 +117,10 @@ class NumberGame {
         });
     
         return new Promise((resolve, reject) => {
-            readline.question("Enter position of the first value you want to add: ", inputOne => {
+            readline.question("Enter index of the first value you want to add: ", inputOne => {
                 const valueOne = parseInt(inputOne.trim());
     
-                readline.question("Enter position of the second value you want to add: ", inputTwo => {
+                readline.question("Enter index of the second value you want to add: ", inputTwo => {
                     const valueTwo = parseInt(inputTwo.trim());
                     
                     if (Math.abs(valueOne - valueTwo) !== 1) {
@@ -133,7 +136,7 @@ class NumberGame {
     }    
     
     // dators izvēlas random skaitļus, ar kuriem veikt gājienu. Realitātē šī metode būtu jāsadala variantā, kad dators
-    // spēlē ar minimax un ar alpha beta un jāimplementē reālie algoritmi. 
+    // spēlē ar minimax un ar alpha beta un jāimplementē algoritmi. 
     computerMove() {
         let index = Math.floor(Math.random() * (this.values.length - 1));
         return [index, index + 1];
