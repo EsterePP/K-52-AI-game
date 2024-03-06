@@ -133,8 +133,7 @@ class NumberGame {
     }    
     
     // dators izvēlas random skaitļus, ar kuriem veikt gājienu. Realitātē šī metode būtu jāsadala variantā, kad dators
-    // spēlē ar minimax un ar alpha beta un jāimplementē reālie algoritmi. Visticamāk arī pats spēles
-    // koks, ko šī metode izmantos būs atseviška klase/ metode. 
+    // spēlē ar minimax un ar alpha beta un jāimplementē reālie algoritmi. 
     computerMove() {
         let index = Math.floor(Math.random() * (this.values.length - 1));
         return [index, index + 1];
