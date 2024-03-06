@@ -1,3 +1,8 @@
+const valuesArrayElement = document.getElementById("h1SkaitluVirkne");
+const outputElement = document.getElementById("systemOutput");
+const playerPointsElement = document.getElementById("playerPoints");
+const opponentPointsElement = document.getElementById("opponentPoints");
+
 class NumberGame {
     constructor() {
       this.humanScore = 0;
@@ -23,22 +28,23 @@ class NumberGame {
           this.startGame();
         });*/
 
-        let arrayLength = prompt("Enter length of the number string");
+        let arrayLength = 0
+        while (arrayLength < 15 || arrayLength > 25 || isNaN(arrayLength)) { // ievaddatu pārbaude (vai iekļaujas robežās (15-25), vai ir skaitlis)
+            arrayLength = prompt("Izvēlieties skaitļu virknes garumu (15-25):");
+        }
         this.generateValues(arrayLength);
         this.startGame();
       }
     
     // masīvā values tiek ģenerēti random skaitļi no 1-9
     generateValues(arrayLength) {
+        let skVirkneTxt = "";
         for (let i = 0; i < arrayLength; i++) {
-          this.values.push(Math.floor(Math.random() * 9) + 1);
+            let randomelem = Math.floor(Math.random() * 9) + 1;
+            skVirkneTxt = skVirkneTxt + "   " + randomelem + "(" + i + ")";
+            this.values.push(randomelem);
         }
-
-        let testforoutput = "";
-        for (let i = 0; i < arrayLength; i++) {
-            testforoutput = testforoutput + this.values[i];
-        }
-        document.getElementById("h1heading").innerHTML = arrayLength + " --> " + testforoutput;
+        valuesArrayElement.innerHTML = skVirkneTxt;
     }
 
     // pati spēles loģika ("async" te ir tikai tāpēc, ka javascript īsti nav domāts command line lietām, tas nav nekas būtisks)
@@ -46,12 +52,12 @@ class NumberGame {
         while (this.values.length > 1) { // spēle turpinās līdz values masīvā vairs nav skaitļu, ko saskaitīt
             let valueString = ""; // izvada masīvu kā skaitļu virkni, lai spēlētājs varētu izvēlēties, kurus skaitļus 
             // var saskaitīt. 
-            console.log("Your current score: " + this.humanScore);
-            console.log("Your opponent's score: " + this.computerScore);
+            playerPointsElement.innerHTML = this.humanScore;
+            opponentPointsElement.innerHTML = this.computerScore;
                 for (let i=0; i<this.values.length; i++) {
                     valueString += this.values[i] + "(" + i + ")" + " ";
                 }
-                console.log(valueString); 
+                valuesArrayElement.innerHTML = valueString; 
             if (this.currentPlayer == 0) { // spēlētāja kārta (cilvēks reprezentē 0, dators- 1)
                 try {
                     const {valueOne, valueTwo} = await this.humanMove(); // cilvēks veic savu gājienu, metodes var apskatīt zemāk
@@ -114,15 +120,15 @@ class NumberGame {
     // self explanatory
     winner() {
         if (this.humanScore > this.computerScore) {
-            console.log("You won!");
+            outputElement.innerHTML = "You won!";
         } else if (this.computerScore > this.humanScore) { 
-            console.log("You lost...")
-        } else { console.log("It's a tie."); } 
+            outputElement.innerHTML = "You lost...";
+        } else { outputElement.innerHTML = "It's a tie."; } 
     }
 
     // no spēlētāja veiktās ievades izgūstam valueOne un valueTwo jeb saskaitāmo skaitļu pozīcijas
-    humanMove() {
-        const readline = require('readline').createInterface({
+    async humanMove() { //async prieks [await], lai sagaidītu lietotāja atbildi (skaitļu pāri)
+        /*const readline = require('readline').createInterface({
             input: process.stdin,
             output: process.stdout
         });
@@ -142,6 +148,19 @@ class NumberGame {
                         resolve({valueOne, valueTwo});
                     }
                 });
+            });
+        });*/
+
+
+        //bik pamainiju ka ir jaievada tikai pirmo no 2 elementiem, nakotne var mainit
+        outputElement.innerHTML = "Izvēlies savu skaitļu pāri!";
+
+        return new Promise(resolve => { //seit vajadzetu sataisit response validation
+            document.getElementById("okButton").addEventListener("click", function() {
+                const inputText = document.getElementById("textField").value.trim();
+                const valueOne = parseInt(inputText);
+                const valueTwo = valueOne + 1;
+                resolve({ valueOne, valueTwo });
             });
         });
     }    
