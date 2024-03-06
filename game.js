@@ -9,7 +9,7 @@ class NumberGame {
     // Lietotājs ievada virknes garumu. Šis neizskatās smuki tikai tāpēc, ka javascript īsti nav domāts command
     // line lietām, mūsu beigu kodā nekas tāds nebūs
     init() {
-        const readline = require('readline');
+        /*const readline = require('readline');
         const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout
@@ -21,7 +21,11 @@ class NumberGame {
           this.generateValues(arrayLength);
           rl.close();
           this.startGame();
-        });
+        });*/
+
+        let arrayLength = prompt("Enter length of the number string");
+        this.generateValues(arrayLength);
+        this.startGame();
       }
     
     // masīvā values tiek ģenerēti random skaitļi no 1-9
@@ -29,6 +33,12 @@ class NumberGame {
         for (let i = 0; i < arrayLength; i++) {
           this.values.push(Math.floor(Math.random() * 9) + 1);
         }
+
+        let testforoutput = "";
+        for (let i = 0; i < arrayLength; i++) {
+            testforoutput = testforoutput + this.values[i];
+        }
+        document.getElementById("h1heading").innerHTML = arrayLength + " --> " + testforoutput;
     }
 
     // pati spēles loģika ("async" te ir tikai tāpēc, ka javascript īsti nav domāts command line lietām, tas nav nekas būtisks)
