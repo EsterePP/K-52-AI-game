@@ -34,7 +34,7 @@ class NumberGame {
     async startGame()  {
         while (this.values.length > 1) { // spēle turpinās līdz values masīvā vairs nav skaitļu, ko saskaitīt
             let valueString = ""; // izvada masīvu kā skaitļu virkni, lai spēlētājs varētu izvēlēties, kurus skaitļus 
-            // var saskaitīt. Ieliekot šo iekš while cikla var arī redzēt kā izmainas masīvs pēc sava gājiena.
+            // var saskaitīt. 
             console.log("Your current score: " + this.humanScore);
             console.log("Your opponent's score: " + this.computerScore);
                 for (let i=0; i<this.values.length; i++) {
