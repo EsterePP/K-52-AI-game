@@ -1,36 +1,21 @@
 const valuesArrayElement = document.getElementById("h1SkaitluVirkne");
 const outputElement = document.getElementById("systemOutput");
 const playerPointsElement = document.getElementById("playerPoints");
-const opponentPointsElement = document.getElementById("opponentPoints");
+const computerPointsElement = document.getElementById("computerPoints");
 
 class NumberGame {
     constructor() {
-      this.humanScore = 0;
+      this.playerScore = 0;
       this.computerScore = 0;
       this.currentPlayer = 0; 
       this.values = [];
     }
 
-    // Lietotājs ievada virknes garumu. Šis neizskatās smuki tikai tāpēc, ka javascript īsti nav domāts command
-    // line lietām, mūsu beigu kodā nekas tāds nebūs
+    // spēlētājs ievada virknes garumu
     init() {
-        /*const readline = require('readline');
-        const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout
-        });
-    
-        // Pagaidām var ievadīt pilnīgi jebkādu garumu
-        rl.question("Enter length of the number string : ", input => {
-          const arrayLength = parseInt(input.trim());
-          this.generateValues(arrayLength);
-          rl.close();
-          this.startGame();
-        });*/
-
         let arrayLength = 0
-        while (arrayLength < 15 || arrayLength > 25 || isNaN(arrayLength)) { // ievaddatu pārbaude (vai iekļaujas robežās (15-25), vai ir skaitlis)
-            arrayLength = prompt("Izvēlieties skaitļu virknes garumu (15-25):");
+        while (arrayLength < 5 || arrayLength > 25 || isNaN(arrayLength)) { // pagaidām debuggošanai atstāju uz 5 - 25
+            arrayLength = prompt("Izvēlieties skaitļu virknes garumu (5-25):");
         }
         this.generateValues(arrayLength);
         this.startGame();
@@ -38,46 +23,42 @@ class NumberGame {
     
     // masīvā values tiek ģenerēti random skaitļi no 1-9
     generateValues(arrayLength) {
-        let skVirkneTxt = "";
+        let valuesTxt = "";
         for (let i = 0; i < arrayLength; i++) {
-            let randomelem = Math.floor(Math.random() * 9) + 1;
-            skVirkneTxt = skVirkneTxt + "   " + randomelem + "(" + i + ")";
-            this.values.push(randomelem);
+            let randomElem = Math.floor(Math.random() * 9) + 1;
+            valuesTxt = valuesTxt + "   " + randomElem + "(" + i + ")";
+            this.values.push(randomElem);
         }
-        valuesArrayElement.innerHTML = skVirkneTxt;
+        valuesArrayElement.innerHTML = valuesTxt;
     }
 
-    // pati spēles loģika ("async" te ir tikai tāpēc, ka javascript īsti nav domāts command line lietām, tas nav nekas būtisks)
+    // pati spēles loģika
     async startGame()  {
         while (this.values.length > 1) { // spēle turpinās līdz values masīvā vairs nav skaitļu, ko saskaitīt
-            let valueString = ""; // izvada masīvu kā skaitļu virkni, lai spēlētājs varētu izvēlēties, kurus skaitļus 
-            // var saskaitīt. 
-            playerPointsElement.innerHTML = this.humanScore;
-            opponentPointsElement.innerHTML = this.computerScore;
+            let valueString = "";
+            playerPointsElement.innerHTML = this.playerScore;
+            computerPointsElement.innerHTML = this.computerScore;
                 for (let i=0; i<this.values.length; i++) {
                     valueString += this.values[i] + "(" + i + ")" + " ";
                 }
                 valuesArrayElement.innerHTML = valueString; 
-            if (this.currentPlayer == 0) { // spēlētāja kārta (cilvēks reprezentē 0, dators- 1)
-                try {
-                    const {valueOne, valueTwo} = await this.humanMove(); // cilvēks veic savu gājienu, metodes var apskatīt zemāk
-                    let sum = this.values[valueOne] + this.values[valueTwo]; 
-                    this.editArray(valueOne, sum); // balstoties uz saskaitīto skaitļu summas veicam izmaiņas virknē
-                    this.points(sum, this.currentPlayer); // saskaitām punktus
-                } catch (error) {
-                    console.error(error.message); 
-                }
-            } else { // ja currentPlayer vērtība ir 0 (tūlīt tā tiks mainīta) ir datora gājiens
-                let [valueOne, valueTwo] = this.computerMove(); // izgšutam jaunos valueOne un valueTwo, ko izvēlas dators
+            // pagaidām spēli vienmēr iesāk spēlētājs
+            if (this.currentPlayer == 0) { // spēlētājs reprezentē 0, dators- 1
+                const {valueOne, valueTwo} = await this.playerMove(); // cilvēks veic savu gājienu, metodes var apskatīt zemāk
+                let sum = this.values[valueOne] + this.values[valueTwo]; 
+                this.editArray(valueOne, sum); // balstoties uz saskaitīto skaitļu summas veicam izmaiņas virknē
+                this.points(sum, this.currentPlayer); // saskaitām punktus
+            } else { // datora kārta, ja currentPlayer = 1
+                let [valueOne, valueTwo] = this.computerMove(); // dators veic gājienu, pārējais notiek tā pat
                 let sum = this.values[valueOne] + this.values[valueTwo];
-                this.editArray(valueOne, sum); // arī balstoties uz daotra veikto gājienu tiek mainīta virkne
-                this.points(sum, this.currentPlayer); // un saskaitīti punkti
+                this.editArray(valueOne, sum); 
+                this.points(sum, this.currentPlayer); 
             }
 
             this.currentPlayer = 1 - this.currentPlayer; // gājiena beigās nomainas spēlētājs
         }
         
-        this.winner(this.computerScore, this.humanScore); // kad algoritms iziet no cikla, uzzinam uzvarētāju
+        this.winner(this.computerScore, this.playerScore); // kad algoritms iziet no cikla, uzzinām uzvarētāju
 
     }
 
@@ -94,15 +75,15 @@ class NumberGame {
         this.values.splice(valueOne, 2, newValue);
     }
 
-    // saskaitām punktus pēc spēles notiekumiem
+    // saskaitām punktus pēc spēles noteikumiem
     points(sum, currentPlayer) {
         if (currentPlayer == 0) {
         if (sum > 7) {
-            this.humanScore =+ 2;
+            this.playerScore += 2;
         } else if (sum < 7) {
-            this.computerScore =- 1;
+            this.computerScore -= 1;
         } else {
-            this.humanScore =-1;
+            this.playerScore -= 1;
         }
         }
 
@@ -110,7 +91,7 @@ class NumberGame {
             if (sum > 7) {
                 this.computerScore += 2;
             } else if (sum < 7) {
-                this.humanScore -= 1;
+                this.playerScore -= 1;
             } else {
                 this.computerScore -= 1;
             }
@@ -119,45 +100,21 @@ class NumberGame {
 
     // self explanatory
     winner() {
-        playerPointsElement.innerHTML = this.humanScore;
-        opponentPointsElement.innerHTML = this.computerScore;
-        if (this.humanScore > this.computerScore) {
+        playerPointsElement.innerHTML = this.playerScore;
+        computerPointsElement.innerHTML = this.computerScore;
+        if (this.playerScore > this.computerScore) {
             outputElement.innerHTML = "You won!";
-        } else if (this.computerScore > this.humanScore) { 
+        } else if (this.computerScore > this.playerScore) { 
             outputElement.innerHTML = "You lost...";
         } else { outputElement.innerHTML = "It's a tie."; } 
     }
 
     // no spēlētāja veiktās ievades izgūstam valueOne un valueTwo jeb saskaitāmo skaitļu pozīcijas
-    async humanMove() { //async prieks [await], lai sagaidītu lietotāja atbildi (skaitļu pāri)
-        /*const readline = require('readline').createInterface({
-            input: process.stdin,
-            output: process.stdout
-        });
-    
-        return new Promise((resolve, reject) => {
-            readline.question("Enter index of the first value you want to add: ", inputOne => {
-                const valueOne = parseInt(inputOne.trim());
-    
-                readline.question("Enter index of the second value you want to add: ", inputTwo => {
-                    const valueTwo = parseInt(inputTwo.trim());
-                    
-                    if (Math.abs(valueOne - valueTwo) !== 1) {
-                        readline.close();
-                        reject(new Error('Values not adjacent'));
-                    } else {
-                        readline.close();
-                        resolve({valueOne, valueTwo});
-                    }
-                });
-            });
-        });*/
-
-
-        //bik pamainiju ka ir jaievada tikai pirmo no 2 elementiem, nakotne var mainit
+    async playerMove() { 
+        //pagaidām jāievada tikai pirmo elementu, valueTwo ir izvēlētais + 1
         outputElement.innerHTML = "Izvēlies savu skaitļu pāri!";
 
-        return new Promise(resolve => { //seit vajadzetu sataisit response validation
+        return new Promise(resolve => { 
             document.getElementById("okButton").addEventListener("click", function() {
                 const inputText = document.getElementById("textField").value.trim();
                 const valueOne = parseInt(inputText);
