@@ -25,9 +25,9 @@ class NumberGame {
     generateValues(arrayLength) {
         let valuesTxt = "";
         for (let i = 0; i < arrayLength; i++) {
-            let randomElem = Math.floor(Math.random() * 9) + 1;
-            valuesTxt = valuesTxt + "   " + randomElem + "(" + i + ")";
-            this.values.push(randomElem);
+            let randomelem = Math.floor(Math.random() * 9) + 1;
+            skVirkneTxt += " " + randomelem + "<span class=\"mini-font\"><i>" + i + "</i></span>&nbsp;&nbsp;";
+            this.values.push(randomelem);
         }
         valuesArrayElement.innerHTML = valuesTxt;
     }
@@ -39,7 +39,7 @@ class NumberGame {
             playerPointsElement.innerHTML = this.playerScore;
             computerPointsElement.innerHTML = this.computerScore;
                 for (let i=0; i<this.values.length; i++) {
-                    valueString += this.values[i] + "(" + i + ")" + " ";
+                    valueString += this.values[i] + "<span class=\"mini-font\"><i>" + i + "</i></span>&nbsp;&nbsp;";
                 }
                 valuesArrayElement.innerHTML = valueString; 
             // pagaidām spēli vienmēr iesāk spēlētājs
