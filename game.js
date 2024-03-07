@@ -11,17 +11,15 @@ class NumberGame {
       this.values = [];
     }
 
-    // spēlētājs ievada virknes garumu
     init() {
         let arrayLength = 0
-        while (arrayLength < 5 || arrayLength > 25 || isNaN(arrayLength)) { // pagaidām debuggošanai atstāju uz 5 - 25
+        while (arrayLength < 5 || arrayLength > 25 || isNaN(arrayLength)) { // pagaidām atstāju uz 5 - 25
             arrayLength = prompt("Izvēlieties skaitļu virknes garumu (5-25):");
         }
         this.generateValues(arrayLength);
         this.startGame();
       }
     
-    // masīvā values tiek ģenerēti random skaitļi no 1-9
     generateValues(arrayLength) {
         let valuesTxt = "";
         for (let i = 0; i < arrayLength; i++) {
@@ -32,9 +30,8 @@ class NumberGame {
         valuesArrayElement.innerHTML = valuesTxt;
     }
 
-    // pati spēles loģika
     async startGame()  {
-        while (this.values.length > 1) { // spēle turpinās līdz values masīvā vairs nav skaitļu, ko saskaitīt
+        while (this.values.length > 1) { 
             let valueString = "";
             playerPointsElement.innerHTML = this.playerScore;
             computerPointsElement.innerHTML = this.computerScore;
@@ -43,26 +40,25 @@ class NumberGame {
                 }
                 valuesArrayElement.innerHTML = valueString; 
             // pagaidām spēli vienmēr iesāk spēlētājs
-            if (this.currentPlayer == 0) { // spēlētājs reprezentē 0, dators- 1
-                const {valueOne, valueTwo} = await this.playerMove(); // cilvēks veic savu gājienu, metodes var apskatīt zemāk
+            if (this.currentPlayer == 0) { // spēlētājs - 0, dators- 1
+                const {valueOne, valueTwo} = await this.playerMove(); 
                 let sum = this.values[valueOne] + this.values[valueTwo]; 
-                this.editArray(valueOne, sum); // balstoties uz saskaitīto skaitļu summas veicam izmaiņas virknē
-                this.points(sum, this.currentPlayer); // saskaitām punktus
-            } else { // datora kārta, ja currentPlayer = 1
-                let [valueOne, valueTwo] = this.computerMove(); // dators veic gājienu, pārējais notiek tā pat
+                this.editArray(valueOne, sum); 
+                this.points(sum, this.currentPlayer); 
+            } else { 
+                let [valueOne, valueTwo] = this.computerMove(); 
                 let sum = this.values[valueOne] + this.values[valueTwo];
                 this.editArray(valueOne, sum); 
                 this.points(sum, this.currentPlayer); 
             }
 
-            this.currentPlayer = 1 - this.currentPlayer; // gājiena beigās nomainas spēlētājs
+            this.currentPlayer = 1 - this.currentPlayer; 
         }
         
-        this.winner(this.computerScore, this.playerScore); // kad algoritms iziet no cikla, uzzinām uzvarētāju
+        this.winner(this.computerScore, this.playerScore); 
 
     }
 
-    // values masīvs tiek izmainīts pēc spēles noteikumiem
     editArray(valueOne, sum) {
         let newValue;
         if (sum > 7) {
@@ -75,7 +71,6 @@ class NumberGame {
         this.values.splice(valueOne, 2, newValue);
     }
 
-    // saskaitām punktus pēc spēles noteikumiem
     points(sum, currentPlayer) {
         if (currentPlayer == 0) {
         if (sum > 7) {
@@ -98,7 +93,6 @@ class NumberGame {
             }
     }
 
-    // self explanatory
     winner() {
         playerPointsElement.innerHTML = this.playerScore;
         computerPointsElement.innerHTML = this.computerScore;
@@ -109,7 +103,6 @@ class NumberGame {
         } else { outputElement.innerHTML = "It's a tie."; } 
     }
 
-    // no spēlētāja veiktās ievades izgūstam valueOne un valueTwo jeb saskaitāmo skaitļu pozīcijas
     async playerMove() { 
         //pagaidām jāievada tikai pirmo elementu, valueTwo ir izvēlētais + 1
         outputElement.innerHTML = "Izvēlies savu skaitļu pāri!";
@@ -124,8 +117,7 @@ class NumberGame {
         });
     }    
     
-    // dators izvēlas random skaitļus, ar kuriem veikt gājienu. Realitātē šī metode būtu jāsadala variantā, kad dators
-    // spēlē ar minimax un ar alpha beta un jāimplementē algoritmi. 
+    // pagaidām ators izvēlas random skaitļus, ar kuriem veikt gājienu. Realitātē šeit jāimplementē minimax un alpha beta apruning
     computerMove() {
         let index = Math.floor(Math.random() * (this.values.length - 1));
         return [index, index + 1];
