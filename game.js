@@ -3,6 +3,8 @@ const outputElement = document.getElementById("systemOutput");
 const playerPointsElement = document.getElementById("playerPoints");
 const computerPointsElement = document.getElementById("computerPoints");
 
+// comment
+
 class NumberGame {
     constructor() {
       this.playerScore = 0;
