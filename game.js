@@ -50,6 +50,11 @@ class NumberGame {
                 let sum = this.values[valueOne] + this.values[valueTwo];
                 this.editArray(valueOne, sum); 
                 this.points(sum, this.currentPlayer); 
+                //Apakšā esošais ir pagaidu testēšanas risinājums (Ēriks Lijurovs)
+                const initState = new State(this.playerScore, this.computerScore, this.values);
+                const tempTree = new GameTree(initState);
+                tempTree.buildTree(initState, 5, false);
+                State.printState(initState);
             }
 
             this.currentPlayer = 1 - this.currentPlayer; 
@@ -121,6 +126,100 @@ class NumberGame {
     computerMove() {
         let index = Math.floor(Math.random() * (this.values.length - 1));
         return [index, index + 1];
+    }
+}
+
+//Klases State un GameTree ar visu no tām izrietošo saturu izmurgoja Ēriks Lijurovs
+// VAJAG SALABOT KĀPĒC BUILDTREE REKURSIJA NEIET UN SAVIENOT AR PĀRĒJO SPĒLI
+class State{    //Spēles stāvoklis
+    constructor(playerScore, computerScore, ...values){    //Sastāv no abu spēlētāju rezultātiem un skaitļu virknes
+        this.playerScore = playerScore;
+        this.computerScore = computerScore;
+        this.values = values;
+        console.log("State created");
+    }
+
+    static computeState(initialState, firstNumAddr, human){    //Stāvokļa aprēķināšanas metode
+        console.log("Izsaukta stavokla aprekinasanas metode");
+        let playerScore = initialState.playerScore;
+        let computerScore = initialState.computerScore;
+        let values = initialState.values;
+
+        if(initialState.values[firstNumAddr] + initialState.values[firstNumAddr+1] > 7){    //Punktu aprēķināšana
+            switch(human){
+                case true:
+                    playerScore += 2;
+                    break;
+                case false:
+                    computerScore += 2;
+                    break;
+            }
+            values.splice(firstNumAddr, 2, 1);  //Vērtību aizvietošana virknē no aizvietojamā pāra sākuma, 2 vērtības, ar 1
+
+        }else if(initialState.values[firstNumAddr] + initialState.values[firstNumAddr+1] < 7){
+            switch(human){
+                case true:
+                    computerScore -= 1;
+                    break;
+                case false:
+                    playerScore -= 1;
+                    break;
+            }
+            values.splice(firstNumAddr, 2, 3);
+
+        }else{
+            switch(human){
+                case true:
+                    playerScore -= 1;
+                    break;
+                case false:
+                    computerScore -= 1;
+                    break;
+            }
+            values.splice(firstNumAddr, 2, 2);
+        }
+
+        let computedState = State(playerScore, computerScore, values);  //Izveido jauno stāvokli
+        printState(computedState);
+        return computedState;   //Atgriež to
+    }
+
+    static printState(State){
+        console.log(State.playerScore + "|" + State.values + "|" + State.computerScore);
+    }
+}
+
+class GameTree{ //Spēles koks
+    constructor(initialState){
+        this.tree = new Map();    //Tā kā šis reāli ir grafs, katram stāvoklim var būt vairāki pēcteči
+        this.tree.set(initialState, []);
+        console.log("Tree created");
+    }
+
+    addPath(fromState, toState){
+        this.tree.get(fromState).push(toState); //Pievieno loku no vecāka virsotnes uz bērna virsotni
+    }
+
+    removePath(fromState, toState){ //Noņem loku no vecāka elementa uz bērna elementu
+        const index = this.tree.get(fromState).findIndex(State => State === toState);
+        this.tree.get(fromState).splice(index, 1);  //Izņem loku no ar vecāka virsotni saistīto saraksta
+    }
+
+    buildTree(initialState, depth, human){ //Spēles koka īstenā būvēšana
+        console.log("Tree building function called");
+        //let paths = initialState.values[0].length - 1; ŠIS IR PAREIZI, BET MET ERRORUS. SALABOŠU
+        let paths = initialState.values.length - 1; //Katram stāvoklim VIENMĒR būs virknes garums - 1 pēctecis
+
+        if(paths == 0 || depth == 0){ //Ja esam koka galā, izejam no metodes
+            console.log("Iziet no buildTree");
+            return;
+        }
+
+        for(let i=0; i<paths; i++){ //Katram stāvoklim ir paths pēcteči
+            let childState = computeState(initialState, i, human);    //Aprēķinam vienu (1) pēcteci sākuma stāvoklim
+            this.addPath(initialState, childState); //Pievienojam ceļu no sākotnējā stāvokļa uz pēctečiem BET NE OTRĀDI
+            this.buildTree(childState, depth-1, !human);  //Būvējam koku tālāk no šī pēcteča, apvēršam spēlētāja bool
+        }
     }
 }
 
