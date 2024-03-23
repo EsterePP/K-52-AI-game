@@ -5,10 +5,8 @@ const computerPointsElement = document.getElementById("computerPoints");
 
 class NumberGame {
     constructor() {
-      this.playerScore = 0;
-      this.computerScore = 0;
-      this.currentPlayer = 0; 
-      this.values = [];
+      this.isHumanCurrentPlayer = true;
+      this.currentState = new State(0, 0, []);
     }
 
     init() {
@@ -16,94 +14,49 @@ class NumberGame {
         while (arrayLength < 5 || arrayLength > 25 || isNaN(arrayLength)) { // pagaidām atstāju uz 5 - 25
             arrayLength = prompt("Izvēlieties skaitļu virknes garumu (5-25):");
         }
-        this.generateValues(arrayLength);
+        this.currentState = new State(0, 0, this.generateValues(arrayLength));
         this.startGame();
       }
     
     generateValues(arrayLength) {
-        let valuesTxt = "";
+        let values = [];
         for (let i = 0; i < arrayLength; i++) {
             let randomelem = Math.floor(Math.random() * 9) + 1;
-            valuesTxt += " " + randomelem + "<span class=\"mini-font\"><i>" + i + "</i></span>&nbsp;&nbsp;";
-            this.values.push(randomelem);
+            values.push(randomelem);
         }
-        valuesArrayElement.innerHTML = valuesTxt;
+        return values;
     }
 
     async startGame()  {
-        while (this.values.length > 1) { 
+        while (this.currentState.values.length > 1) {
             let valueString = "";
-            playerPointsElement.innerHTML = this.playerScore;
-            computerPointsElement.innerHTML = this.computerScore;
-                for (let i=0; i<this.values.length; i++) {
-                    valueString += this.values[i] + "<span class=\"mini-font\"><i>" + i + "</i></span>&nbsp;&nbsp;";
+            playerPointsElement.innerHTML = this.currentState.playerScore;
+            computerPointsElement.innerHTML = this.currentState.computerScore;
+                for (let i=0; i<this.currentState.values.length; i++) {
+                    valueString += this.currentState.values[i] + "<span class=\"mini-font\"><i>" + i + "</i></span>&nbsp;&nbsp;";
                 }
                 valuesArrayElement.innerHTML = valueString; 
             // pagaidām spēli vienmēr iesāk spēlētājs
-            if (this.currentPlayer == 0) { // spēlētājs - 0, dators- 1
+            if (this.isHumanCurrentPlayer == true) {
                 const {valueOne, valueTwo} = await this.playerMove(); 
-                let sum = this.values[valueOne] + this.values[valueTwo]; 
-                this.editArray(valueOne, sum); 
-                this.points(sum, this.currentPlayer); 
+                this.currentState = State.computeState(this.currentState, valueOne, this.isHumanCurrentPlayer);
             } else { 
                 let [valueOne, valueTwo] = this.computerMove(); 
-                let sum = this.values[valueOne] + this.values[valueTwo];
-                this.editArray(valueOne, sum); 
-                this.points(sum, this.currentPlayer); 
-                //Apakšā esošais ir pagaidu testēšanas risinājums (Ēriks Lijurovs)
-                const initState = new State(this.playerScore, this.computerScore, this.values);
-                State.printState(initState);
-                const tempTree = new GameTree(initState);
-                tempTree.buildTree(initState, 5, false);
+                this.currentState = State.computeState(this.currentState, valueOne, this.isHumanCurrentPlayer);
             }
 
-            this.currentPlayer = 1 - this.currentPlayer; 
+            this.isHumanCurrentPlayer = !this.isHumanCurrentPlayer;
         }
-        
-        this.winner(this.computerScore, this.playerScore); 
+        this.winner();
 
-    }
-
-    editArray(valueOne, sum) {
-        let newValue;
-        if (sum > 7) {
-            newValue = 1;
-        } else if (sum < 7) {
-            newValue = 3;
-        } else {
-            newValue = 2;
-        }
-        this.values.splice(valueOne, 2, newValue);
-    }
-
-    points(sum, currentPlayer) {
-        if (currentPlayer == 0) {
-        if (sum > 7) {
-            this.playerScore += 2;
-        } else if (sum < 7) {
-            this.computerScore -= 1;
-        } else {
-            this.playerScore -= 1;
-        }
-        }
-
-        if (currentPlayer == 1) {
-            if (sum > 7) {
-                this.computerScore += 2;
-            } else if (sum < 7) {
-                this.playerScore -= 1;
-            } else {
-                this.computerScore -= 1;
-            }
-            }
     }
 
     winner() {
-        playerPointsElement.innerHTML = this.playerScore;
-        computerPointsElement.innerHTML = this.computerScore;
-        if (this.playerScore > this.computerScore) {
+        playerPointsElement.innerHTML = this.currentState.playerScore;
+        computerPointsElement.innerHTML = this.currentState.computerScore;
+        if (this.currentState.playerScore > this.currentState.computerScore) {
             outputElement.innerHTML = "You won!";
-        } else if (this.computerScore > this.playerScore) { 
+        } else if (this.currentState.computerScore > this.currentState.playerScore) { 
             outputElement.innerHTML = "You lost...";
         } else { outputElement.innerHTML = "It's a tie."; } 
     }
@@ -124,7 +77,7 @@ class NumberGame {
     
     // pagaidām ators izvēlas random skaitļus, ar kuriem veikt gājienu. Realitātē šeit jāimplementē minimax un alpha beta apruning
     computerMove() {
-        let index = Math.floor(Math.random() * (this.values.length - 1));
+        let index = Math.floor(Math.random() * (this.currentState.values.length - 1));
         return [index, index + 1];
     }
 }
@@ -132,7 +85,7 @@ class NumberGame {
 //Klases State un GameTree ar visu no tām izrietošo saturu izmurgoja Ēriks Lijurovs
 // VAJAG SAVIENOT AR PĀRĒJO SPĒLI
 class State{    //Spēles stāvoklis
-    constructor(playerScore, computerScore, ...values){    //Sastāv no abu spēlētāju rezultātiem un skaitļu virknes
+    constructor(playerScore, computerScore, values){    //Sastāv no abu spēlētāju rezultātiem un skaitļu virknes
         this.playerScore = playerScore;
         this.computerScore = computerScore;
         this.values = values;
@@ -142,7 +95,7 @@ class State{    //Spēles stāvoklis
         let playerScore = initialState.playerScore;
         let computerScore = initialState.computerScore;
         //SEKOJOŠAIS IR SLIKTS, NEĒRTS KODS, BET BEZ TĀ NEKAS NESTRĀDĀ
-        const stringValues = initialState.values[0].toString(); //Pārveidojam skaitļu virkni no objekta par string
+        const stringValues = initialState.values.toString(); //Pārveidojam skaitļu virkni no objekta par string
         const values = stringValues.split(',').map(Number);     //un atpakaļ
         //Kāpēc? Lai JS liek virkni adresē, kas NAV vecāka objekta virknes adrese. Citādi vecāka elementa virkne arī tiks mainīta.
 
@@ -213,7 +166,7 @@ class GameTree{ //Spēles koks
     }
 
     buildTree(initialState, depth, human){ //Spēles koka īstenā būvēšana
-        let paths = initialState.values[0].length - 1;  //Katram stāvoklim VIENMĒR būs virknes garums - 1 pēctecis
+        let paths = initialState.values.length - 1;  //Katram stāvoklim VIENMĒR būs virknes garums - 1 pēctecis
         const initialStateStr = JSON.stringify(initialState);
 
         if(this.tree.has(initialStateStr) === false){    //Ja vecāka virsotnes vēl nav kokā, ieliekam to
@@ -234,4 +187,3 @@ class GameTree{ //Spēles koks
 
 const game = new NumberGame();
 game.init();
-
