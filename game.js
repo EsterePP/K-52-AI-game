@@ -52,9 +52,9 @@ class NumberGame {
                 this.points(sum, this.currentPlayer); 
                 //Apakšā esošais ir pagaidu testēšanas risinājums (Ēriks Lijurovs)
                 const initState = new State(this.playerScore, this.computerScore, this.values);
+                State.printState(initState);
                 const tempTree = new GameTree(initState);
                 tempTree.buildTree(initState, 5, false);
-                State.printState(initState);
             }
 
             this.currentPlayer = 1 - this.currentPlayer; 
@@ -130,22 +130,23 @@ class NumberGame {
 }
 
 //Klases State un GameTree ar visu no tām izrietošo saturu izmurgoja Ēriks Lijurovs
-// VAJAG SALABOT KĀPĒC BUILDTREE REKURSIJA NEIET UN SAVIENOT AR PĀRĒJO SPĒLI
+// VAJAG SAVIENOT AR PĀRĒJO SPĒLI
 class State{    //Spēles stāvoklis
     constructor(playerScore, computerScore, ...values){    //Sastāv no abu spēlētāju rezultātiem un skaitļu virknes
         this.playerScore = playerScore;
         this.computerScore = computerScore;
         this.values = values;
-        console.log("State created");
     }
 
     static computeState(initialState, firstNumAddr, human){    //Stāvokļa aprēķināšanas metode
-        console.log("Izsaukta stavokla aprekinasanas metode");
         let playerScore = initialState.playerScore;
         let computerScore = initialState.computerScore;
-        let values = initialState.values;
+        //SEKOJOŠAIS IR SLIKTS, NEĒRTS KODS, BET BEZ TĀ NEKAS NESTRĀDĀ
+        const stringValues = initialState.values[0].toString(); //Pārveidojam skaitļu virkni no objekta par string
+        const values = stringValues.split(',').map(Number);     //un atpakaļ
+        //Kāpēc? Lai JS liek virkni adresē, kas NAV vecāka objekta virknes adrese. Citādi vecāka elementa virkne arī tiks mainīta.
 
-        if(initialState.values[firstNumAddr] + initialState.values[firstNumAddr+1] > 7){    //Punktu aprēķināšana
+        if(values[firstNumAddr] + values[firstNumAddr+1] > 7){    //Punktu aprēķināšana
             switch(human){
                 case true:
                     playerScore += 2;
@@ -156,7 +157,7 @@ class State{    //Spēles stāvoklis
             }
             values.splice(firstNumAddr, 2, 1);  //Vērtību aizvietošana virknē no aizvietojamā pāra sākuma, 2 vērtības, ar 1
 
-        }else if(initialState.values[firstNumAddr] + initialState.values[firstNumAddr+1] < 7){
+        }else if(values[firstNumAddr] + values[firstNumAddr+1] < 7){
             switch(human){
                 case true:
                     computerScore -= 1;
@@ -179,8 +180,7 @@ class State{    //Spēles stāvoklis
             values.splice(firstNumAddr, 2, 2);
         }
 
-        let computedState = State(playerScore, computerScore, values);  //Izveido jauno stāvokli
-        printState(computedState);
+        const computedState = new State(playerScore, computerScore, values);  //Izveido jauno stāvokli
         return computedState;   //Atgriež to
     }
 
@@ -192,31 +192,40 @@ class State{    //Spēles stāvoklis
 class GameTree{ //Spēles koks
     constructor(initialState){
         this.tree = new Map();    //Tā kā šis reāli ir grafs, katram stāvoklim var būt vairāki pēcteči
-        this.tree.set(initialState, []);
-        console.log("Tree created");
+        this.tree.set(JSON.stringify(initialState), []);    //Spēles kokam key ir stāvoklis kā string, lai atvieglotu salīdzināšanu
     }
 
-    addPath(fromState, toState){
-        this.tree.get(fromState).push(toState); //Pievieno loku no vecāka virsotnes uz bērna virsotni
+    addPath(fromState, toState){    //Loka pievienošanas funkcija grafā
+        const from = JSON.stringify(fromState);
+        
+        if(this.tree.has(from)){    //Ja kokā ir vecāka virsotne
+            this.tree.get(from).push(toState); //Pievieno loku no vecāka virsotnes uz bērna virsotni
+        }else{
+            console.log("Nav tada stavokla");
+        }
     }
 
-    removePath(fromState, toState){ //Noņem loku no vecāka elementa uz bērna elementu
-        const index = this.tree.get(fromState).findIndex(State => State === toState);
-        this.tree.get(fromState).splice(index, 1);  //Izņem loku no ar vecāka virsotni saistīto saraksta
+    removePath(fromState, toState){ //Noņem loku no vecāka elementa uz bērna elementu ŠĪ FUNKCIJA NAV PĀRBAUDĪTA DARBĪBĀ
+        const from = JSON.stringify(fromState);
+        const to = JSON.stringify(toState);
+        const index = this.tree.get(from).findIndex((element) => JSON.stringify(element) == to);
+        this.tree.get(from).splice(index, 1);  //Izņem loku no ar vecāka virsotni saistīto saraksta
     }
 
     buildTree(initialState, depth, human){ //Spēles koka īstenā būvēšana
-        console.log("Tree building function called");
-        //let paths = initialState.values[0].length - 1; ŠIS IR PAREIZI, BET MET ERRORUS. SALABOŠU
-        let paths = initialState.values.length - 1; //Katram stāvoklim VIENMĒR būs virknes garums - 1 pēctecis
+        let paths = initialState.values[0].length - 1;  //Katram stāvoklim VIENMĒR būs virknes garums - 1 pēctecis
+        const initialStateStr = JSON.stringify(initialState);
+
+        if(this.tree.has(initialStateStr) === false){    //Ja vecāka virsotnes vēl nav kokā, ieliekam to
+            this.tree.set(initialStateStr, []);
+        }
 
         if(paths == 0 || depth == 0){ //Ja esam koka galā, izejam no metodes
-            console.log("Iziet no buildTree");
             return;
         }
 
         for(let i=0; i<paths; i++){ //Katram stāvoklim ir paths pēcteči
-            let childState = computeState(initialState, i, human);    //Aprēķinam vienu (1) pēcteci sākuma stāvoklim
+            const childState = State.computeState(initialState, i, human);    //Aprēķinam vienu (1) pēcteci sākuma stāvoklim
             this.addPath(initialState, childState); //Pievienojam ceļu no sākotnējā stāvokļa uz pēctečiem BET NE OTRĀDI
             this.buildTree(childState, depth-1, !human);  //Būvējam koku tālāk no šī pēcteča, apvēršam spēlētāja bool
         }
