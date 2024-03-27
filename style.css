@@ -55,6 +55,10 @@ body{
     background-color: #f3f2ec;
 }
 
+hr{
+    border: none;
+}
+
 .container{
     display: flex;
     flex-direction: column;
