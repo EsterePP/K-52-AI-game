@@ -1,7 +1,32 @@
+@media (max-width: 1000px) {
+    .virkneElement{
+        font-size: 20px !important;
+        height: 45px !important;
+    }
+    .container{
+        width: 100% !important;
+        margin: 0px !important;
+    }
+}
+
+@media (max-width: 800px) {
+    #h1SkaitluVirkne{
+        width: 99% !important;
+        margin: 5px !important;
+    }
+}
+
+@media (max-width: 650px) {
+    .virkneElement{
+        font-size: 16px !important;
+        height: 35px !important;
+    }
+}
+
 #h1SkaitluVirkne {
     border-radius: 10px;
     background: #cdc1b4;
-    padding: 10px;
+    margin: 10px 20px 10px 20px;
     color: rgb(255, 255, 255);
     text-align: center;
     font-family: Arial;
@@ -10,11 +35,19 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    align-self: center;
     gap: 16px;
+    flex-wrap: wrap;
+    row-gap: 0px;
+
+    width: 100%;
+
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 2px 4px 0px inset;
 }
 
 .mini-font {
     font-size: xx-small;
+    margin-top: 14px;
 }
 
 
@@ -22,17 +55,171 @@ body{
     background-color: #f3f2ec;
 }
 
-.virkneElement{
+.container{
+    display: flex;
+    flex-direction: column;
+    margin: auto;
+    width: 70%;
+}
+
+.top-container{
+    display: flex;
+    flex-direction: row;
+    justify-content:space-between ;
+}
+
+.left-container{
+    width: 50%;
+}
+
+.right-container{
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 20px;
+    width: 50%;
+}
+
+.playerPoints-div, .computerPoints-div{
+    display: flex;
+    flex-direction: column;
     background-color: #8f7a66;
-    padding: 6px 14px 6px 14px;
+    align-items: center;
+    width: 90px;
+    height: 60px;
+    border-radius: 4px;
+
+    box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
+}
+
+#playerPoints-name, #computerPoints-name, #playerPoints, #computerPoints{
+    margin: 0px;
+}
+
+#playerPoints-name, #computerPoints-name{
+    margin-top: 3px;
+    color: #eee4da;
+    font-size: 20px;
+
+}
+
+#playerPoints, #computerPoints{
+    justify-self: center;
+    margin: auto;
+    color: white;
+    font-size: 22px;
+}
+
+.title{
+    color: #776e65;
+    margin-bottom: -5px;
+    font-size: 36px;
+}
+
+.sub-title-1{
+    color: #776e65;
+    margin-bottom: -15px;
+    font-size: 20px;
+}
+
+.sub-title-2{
+    color: #776e65;
+    font-size: 18px;
+}
+
+.virkneElement{
+    display: flex;
+    background-color: #8f7a66;
+    width: 60px;
+    height: 60px;
+    align-items: center;
+    justify-content: center;
     border-radius: 4px;
     color: white;
-
+    font-weight: 600;
     cursor: pointer;
+
+    margin: 15px 0px 20px 0px;
 
     box-shadow: rgba(143, 122, 102, 0.4) -4px 4px, rgba(143, 122, 102, 0.3) -8px 8px, rgba(143, 122, 102, 0.2) -11px 11px;
 }
 
 .virkneElement:focus{
+    transition: ease-in 0.2s ;
     background-color: #8f7a66b2 ;
 }
+
+.virkneElement:hover{
+    transition: ease-in-out 0.2s;
+    transform: scale(1.03);
+    box-shadow: rgba(143, 122, 102, 0.4) -5px 5px, rgba(143, 122, 102, 0.3) -11px 11px, rgba(143, 122, 102, 0.2) -14px 14px;
+}
+.virkneElement:not(:hover){
+    transition: ease-in-out 0.2s;
+}
+
+
+.input-container{
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+}
+
+#input-title{
+    color: #8f7a66;
+}
+
+#textField{
+    background-color: transparent;
+    border: none;
+    font-size: 46px;
+    color: #8f7a66ad;
+    max-width: 50px;
+    font-weight: 600;
+    cursor:crosshair;
+}
+
+#textField:focus{
+    outline: none !important;
+}
+
+#okButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 50px;
+    margin-top: 10px;
+    position: relative;
+    padding: 0 20px;
+    font-size: 18px;
+    border: 0;
+    color: white;
+    box-shadow: #756453 0px 7px 0px 0px;
+    background-color: #8f7a66;
+    border-radius: 6px;
+    overflow: hidden;
+    transition: 28ms cubic-bezier(.4, .6, .3, 1);
+    cursor: pointer;
+}
+
+#okButton:hover{
+    transition: ease-in-out 0.2s;
+    background-color: #8f7a66e5;
+}
+#okButton:not(:hover){
+    transition: ease-in-out 0.2s;
+}
+   
+   
+#okButton:active {
+    box-shadow: none;
+    transform: translateY(7px);
+    transition: 35ms cubic-bezier(.5, .7, .4, 1);
+}
+
+#systemOutput{
+    margin-left: auto;
+    color: #8f7a66;
+}
+   
