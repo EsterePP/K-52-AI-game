@@ -7,6 +7,7 @@ class NumberGame {
     constructor() {
       this.isHumanCurrentPlayer = true;
       this.currentState = new State(0, 0, []);
+      this.selectedParagraphIndex = null;
     }
 
     init() {
@@ -27,29 +28,48 @@ class NumberGame {
         return values;
     }
 
-    async startGame()  {
+    // Funkcija, kura do iespēju klikšķināt skaitļus, nevis rakstīt tos manuāli 
+    toggleP = (index) => {
+        console.log("Clicked index:", index); // Šo var izdēst 
+        document.getElementById("textField").value = index;
+        return index;
+    };
+
+    async startGame() {
+        const self = this; // Nepieciešams lai realizētu skaitļa izvēli ar klikšķi
         while (this.currentState.values.length > 1) {
             let valueString = "";
             playerPointsElement.innerHTML = this.currentState.playerScore;
             computerPointsElement.innerHTML = this.currentState.computerScore;
-                for (let i=0; i<this.currentState.values.length; i++) {
-                    valueString += this.currentState.values[i] + "<span class=\"mini-font\"><i>" + i + "</i></span>&nbsp;&nbsp;";
-                }
-                valuesArrayElement.innerHTML = valueString; 
+            for (let i = 0; i < this.currentState.values.length; i++) {
+                valueString += `<p tabindex='0' class='virkneElement e${i}' id='toggleNumber'>${this.currentState.values[i]}<span class=\"mini-font\"><i>${i}</i></span></p>`;
+            }
+            valuesArrayElement.innerHTML = valueString;
+
+            // Pievieno onClick funkcionalitāti skaitļiem, lai uzklikšķinot uz tiem, saglabājas index(jeb kārtas numurs)
+            document.querySelectorAll('.virkneElement').forEach((paragraph, index) => {
+                paragraph.addEventListener('click', function() {
+                    // Saglabājam kārtas numuru
+                    self.selectedParagraphIndex = index;
+                    // Izsauc toggleP() kad tiek uzklikšķināts
+                    self.toggleP(index);
+                });
+            });
+
             // pagaidām spēli vienmēr iesāk spēlētājs
             if (this.isHumanCurrentPlayer == true) {
-                const {valueOne, valueTwo} = await this.playerMove(); 
+                const { valueOne, valueTwo } = await this.playerMove();
                 this.currentState = State.computeState(this.currentState, valueOne, this.isHumanCurrentPlayer);
-            } else { 
-                let [valueOne, valueTwo] = this.computerMove(); 
+            } else {
+                let [valueOne, valueTwo] = this.computerMove();
                 this.currentState = State.computeState(this.currentState, valueOne, this.isHumanCurrentPlayer);
             }
 
             this.isHumanCurrentPlayer = !this.isHumanCurrentPlayer;
         }
         this.winner();
-
     }
+    
 
     winner() {
         playerPointsElement.innerHTML = this.currentState.playerScore;
@@ -61,21 +81,25 @@ class NumberGame {
         } else { outputElement.innerHTML = "It's a tie."; } 
     }
 
-    async playerMove() { 
+    async playerMove() {
+        // Dabūn pieķļuvi pie selectedParagraphIndex un reseto to
+        const index = this.selectedParagraphIndex;
+        this.selectedParagraphIndex = null;
+
         //pagaidām jāievada tikai pirmo elementu, valueTwo ir izvēlētais + 1
         outputElement.innerHTML = "Izvēlies savu skaitļu pāri!";
 
-        return new Promise(resolve => { 
+        return new Promise(resolve => {
             document.getElementById("okButton").addEventListener("click", function() {
-                const inputText = document.getElementById("textField").value.trim();
-                const valueOne = parseInt(inputText);
+                // Bišku pamainīju loģiku, lai strādātu ar skaitļu klikšķināšanu
+                const valueOne = index !== null ? index : parseInt(document.getElementById("textField").value.trim());
                 const valueTwo = valueOne + 1;
                 resolve({ valueOne, valueTwo });
             });
         });
-    }    
+    }
     
-    // pagaidām ators izvēlas random skaitļus, ar kuriem veikt gājienu. Realitātē šeit jāimplementē minimax un alpha beta apruning
+    // pagaidām dators izvēlas random skaitļus, ar kuriem veikt gājienu. Realitātē šeit jāimplementē minimax un alpha beta apruning
     computerMove() {
         let index = Math.floor(Math.random() * (this.currentState.values.length - 1));
         return [index, index + 1];
