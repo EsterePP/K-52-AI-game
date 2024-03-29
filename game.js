@@ -170,6 +170,9 @@ class GameTree{ //Spēles koks
     constructor(initialState){
         this.tree = new Map();    //Tā kā šis reāli ir grafs, katram stāvoklim var būt vairāki pēcteči
         this.tree.set(JSON.stringify(initialState), []);    //Spēles kokam key ir stāvoklis kā string, lai atvieglotu salīdzināšanu
+       
+       // this.evaluatedNodes = new Set(); // cheks prieks koka
+       // this.tree.set(JSON.stringify(initialState), []);
     }
 
     addPath(fromState, toState){    //Loka pievienošanas funkcija grafā
@@ -189,7 +192,30 @@ class GameTree{ //Spēles koks
         this.tree.get(from).splice(index, 1);  //Izņem loku no ar vecāka virsotni saistīto saraksta
     }
 
-    buildTree(initialState, depth, human){ //Spēles koka īstenā būvēšana
+    // ARTŪRS - nomainīju buildtree nedaudz jo minimaxam radās kļūda, atkārtojās virsotnes
+    // pievienoju checku kas parbauda vai jau ir apmeklets stavoklis un iznemu paths, izradas ka nav vajadzigs (hz bet strada)
+
+    buildTree(initialState, depth, human, visited = new Set()) { //Spēles koka īstenā būvēšana + visited set
+        const initialStateStr = JSON.stringify(initialState);
+    
+        if (this.tree.has(initialStateStr) === false) {   //Ja vecāka virsotnes vēl nav kokā, ieliekam to
+            this.tree.set(initialStateStr, []);
+        }
+    
+        if (visited.has(initialStateStr) || depth === 0) { //parbaudam vai state ir apskatits
+            return; 
+        }
+        visited.add(initialStateStr); //ja nav bijis, tad pec apskatisanas pievienojam so setam ar apskatitajiem state
+    
+        for (let i = 0; i < initialState.values.length - 1; i++) {
+            const childState = State.computeState(initialState, i, human); //Aprēķinam vienu (1) pēcteci sākuma stāvoklim
+            this.addPath(initialState, childState); //Pievienojam ceļu no sākotnējā stāvokļa uz pēctečiem BET NE OTRĀDI
+            this.buildTree(childState, depth - 1, !human, visited); //Būvējam koku tālāk no šī pēcteča, apvēršam spēlētāja bool
+        }
+    }
+    
+    /* VECAIS BUILDTREE KODS (Atstasu katram gadijumam ja nu mans beigas izradas kludains)
+    buildTree(initialState, depth, human){ 
         let paths = initialState.values.length - 1;  //Katram stāvoklim VIENMĒR būs virknes garums - 1 pēctecis
         const initialStateStr = JSON.stringify(initialState);
 
@@ -207,7 +233,85 @@ class GameTree{ //Spēles koks
             this.buildTree(childState, depth-1, !human);  //Būvējam koku tālāk no šī pēcteča, apvēršam spēlētāja bool
         }
     }
+*/
+    //arturs schizo minimax algoritms
+
+    printTree() {   //metode kas printē koka šī brīža state
+        console.log("Game Tree:");  //virsraksts
+        for (const [stateStr, children] of this.tree) {  
+            console.log(`State: ${stateStr}`);  //uzraksta speletaju punktus un si briza skaitlu virkni
+            console.log("Children:");
+            for (const child of children) {
+                console.log(JSON.stringify(child)); //uzraksta apaks virsotnes (children)
+            }
+            console.log("---"); //linija prieks lasamibas
+        }
+    }
+
+    evaluateState(state) { //metode kas aprekina vai virsotne uzvar computer vai player
+        const scoreDifference = state.playerScore - state.computerScore;
+        if (scoreDifference > 0) {
+            return 1; // ja speletaja score - computer score > 0 tad uzvar speletajs un atgriez 1
+        } else if (scoreDifference < 0) {
+            return -1; // Ja speletaja score - computer score < 0 tad uzvar com un atgriez -1
+        } else {
+            return 0; // parejos gadijumos ir neizskirts un atgriez 0
+        }
+       
+    }
+
+    minimax(node, depth, isMinimizer) { //minimax algoritms ar virsotni, dzilumu un parbaudi vai ir minimizetajs
+
+        const nodeStr = JSON.stringify(node); //dabu string no virsotnes
+        const children = this.tree.get(JSON.stringify(node)); //dabujam apaksvirsotnes
+        
+        // ja ir apaksvirsotnes, tad ejam talak lidz beigam
+        if (children) {
+            for (const child of children) {
+                this.minimax(child, depth + 1, !isMinimizer); //ar katru soli pievienojam +1 dzilumam un nomainam minimizer statusu
+            }
+        }
+
+        // parbaudam, ja nav apaksvirsotnes tad sakam virsotnes novertesanu
+        if (!children || children.length === 0) {
+            // novertejam virsotni izmantojot ieprieks izveidoto evaluatestate
+            node.evaluation = this.evaluateState(node);
+            console.log("strupcela virsotne") //ta ka strupcela node, izvadam tekstu
+        } else {
+            //seit novertejam virsotni izmantojot tas apaksvirsotnes
+            if (isMinimizer) {
+                // ja atrodamies min limeni, tad izvelamies minimumu no apaksvirsotnem
+                node.evaluation = Math.min(...children.map(child => child.evaluation));
+                console.log("minimizer")
+            } else {
+                // ja atrodamies max limeni tad izvelamies maksimumu no apaksvirsotnem
+                node.evaluation = Math.max(...children.map(child => child.evaluation));
+                console.log("maximizer")
+            }
+        }
+
+        // izvadam sis virsotnes novertejumu
+        console.log(`Evaluation for state ${JSON.stringify(node)}: ${node.evaluation}`);
+    }
+   
 }
 
 const game = new NumberGame();
 game.init();
+
+
+const initialState = new State(0, 0, [1, 2, 4, 1, 8]); // uztaisam piemera speles stavokli,
+//  izmantoju situaciju kuru uzzimeju uz lapas un pareizi noverteju, meginaju lai dators izdara tapat.
+// pec tam bus jaimplemente lai seit initialstate tiek nemts no taa random number generatora
+const depth = 4; // seit ir dzilums lidz kuram mes buvejam koku
+const human = true; // cilveks eksiste :)
+const gameTree = new GameTree(initialState); //taisam koku
+
+gameTree.buildTree(initialState, depth, human); // buvejam koku
+gameTree.printTree(); // printejam koku browsera konsole
+gameTree.minimax(initialState); //minimax algoritms tiek izsaukts
+
+//-Artūrs kaut kā esmu sataisijis to minimaxu tagad sergejs meginas uztaisit alfa beta un tad atliks implementet
+//lai stavoklis tiek generets randomā. Un tad hz ka bus jauztaisa lai dators iet pa -1 virsotnēm.
+//Paldies par uzmanibu es eju gulet, es vnk vairs nevaru
+//programmesana ir briesmiga
