@@ -295,47 +295,53 @@ class GameTree{ //Spēles koks
     }
 
     
-    alphaBeta(node, depth, alpha = -Infinity, beta = Infinity, isMinimizer) {
+    alphabeta(node, depth, alpha, beta, isMinimizer) {
         const nodeStr = JSON.stringify(node);
         const children = this.tree.get(nodeStr);
     
-        if (!children || children.length === 0 || depth === 0) {
-            // Ja nav bērnu vai sasniegts maksimālais dziļums, novērtē virsotni un atgriez novērtējumu
+        // Ja nav bērnu vai tie ir beigu mezgli, novērtējam esošo stāvokli un beidzam rekursiju
+        if (!children || children.length === 0) {
             node.evaluation = this.evaluateState(node);
-            console.log(`Evaluation for state ${nodeStr}: ${node.evaluation}`);
+            console.log("Beigu mezgls");
+            console.log(`Evaluation for state ${JSON.stringify(node)}: ${node.evaluation}`);
             return node.evaluation;
         }
     
+        // Minimizētājs
         if (isMinimizer) {
-            // Ja mēs minimizējam, sākam ar sākotnējo lielumu "v"
-            let value = Infinity;
+            let evaluation = Number.POSITIVE_INFINITY; // Sākam ar pozitīvo bezgalību, lai atrastu minimālo vērtību
+            // Pārskatam visus bērnus
             for (const child of children) {
-                // Rekursīvi izsaucam alphaBeta uz bērnu virsotnēm
-                value = Math.min(value, this.alphaBeta(child, depth - 1, alpha, beta, false));
-                beta = Math.min(beta, value); // atjauninām beta vērtību
-                console.log(`Minimizer: ${value}, Alpha: ${alpha}, Beta: ${beta}`);
-                if (beta <= alpha) {
-                    // Ja beta ir mazāks vai vienāds ar alfa, pārtraucam ciklu
-                    console.log("Beta cut-off");
+                // Rekursīvi izsaucam alfabeta funkciju
+                evaluation = Math.min(evaluation, this.alphabeta(child, depth + 1, alpha, beta, false));
+                beta = Math.min(beta, evaluation); // Atjaunojam betas vērtību
+                if (beta <= alpha) { // Pārtraucam apstrādi, ja ir notikusi beta griezums
+                    console.log("Beta cut-off occurred");
                     break;
                 }
             }
-            return value;
-        } else {
-            // Ja mēs maksimizējam, sākam ar sākotnējo lielumu "v"
-            let value = -Infinity;
+            node.evaluation = evaluation; // Saglabājam mezgla novērtējumu
+            console.log("Minimizer");
+            console.log(`Evaluation for state ${JSON.stringify(node)}: ${node.evaluation}`);
+            return evaluation;
+        } 
+        // Maksimizētājs
+        else {
+            let evaluation = Number.NEGATIVE_INFINITY; // Sākam ar negatīvo bezgalību, lai atrastu maksimālo vērtību
+            // Pārskatam visus bērnus
             for (const child of children) {
-                // Rekursīvi izsaucam alphaBeta uz bērnu virsotnēm
-                value = Math.max(value, this.alphaBeta(child, depth - 1, alpha, beta, true));
-                alpha = Math.max(alpha, value); // atjauninām alpha vērtību
-                console.log(`Maximizer: ${value}, Alpha: ${alpha}, Beta: ${beta}`);
-                if (beta <= alpha) {
-                    // Ja beta ir mazāks vai vienāds ar alfa, pārtraucam ciklu
-                    console.log("Alpha cut-off");
+                // Rekursīvi izsaucam alfabeta funkciju
+                evaluation = Math.max(evaluation, this.alphabeta(child, depth + 1, alpha, beta, true));
+                alpha = Math.max(alpha, evaluation); // Atjaunojam alfas vērtību
+                if (beta <= alpha) { // Pārtraucam apstrādi, ja ir notikusi alfa griezums
+                    console.log("Alpha cut-off occurred");
                     break;
                 }
             }
-            return value;
+            node.evaluation = evaluation; // Saglabājam mezgla novērtējumu
+            console.log("Maximizer");
+            console.log(`Evaluation for state ${JSON.stringify(node)}: ${node.evaluation}`);
+            return evaluation;
         }
     }
 
