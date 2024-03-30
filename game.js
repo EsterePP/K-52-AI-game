@@ -293,7 +293,55 @@ class GameTree{ //Spēles koks
         // izvadam sis virsotnes novertejumu
         console.log(`Evaluation for state ${JSON.stringify(node)}: ${node.evaluation}`);
     }
-   
+
+    
+    alphaBeta(node, depth, alpha = -Infinity, beta = Infinity, isMinimizer) {
+        const nodeStr = JSON.stringify(node);
+        const children = this.tree.get(nodeStr);
+    
+        if (!children || children.length === 0 || depth === 0) {
+            // Ja nav bērnu vai sasniegts maksimālais dziļums, novērtē virsotni un atgriez novērtējumu
+            node.evaluation = this.evaluateState(node);
+            console.log(`Evaluation for state ${nodeStr}: ${node.evaluation}`);
+            return node.evaluation;
+        }
+    
+        if (isMinimizer) {
+            // Ja mēs minimizējam, sākam ar sākotnējo lielumu "v"
+            let value = Infinity;
+            for (const child of children) {
+                // Rekursīvi izsaucam alphaBeta uz bērnu virsotnēm
+                value = Math.min(value, this.alphaBeta(child, depth - 1, alpha, beta, false));
+                beta = Math.min(beta, value); // atjauninām beta vērtību
+                console.log(`Minimizer: ${value}, Alpha: ${alpha}, Beta: ${beta}`);
+                if (beta <= alpha) {
+                    // Ja beta ir mazāks vai vienāds ar alfa, pārtraucam ciklu
+                    console.log("Beta cut-off");
+                    break;
+                }
+            }
+            return value;
+        } else {
+            // Ja mēs maksimizējam, sākam ar sākotnējo lielumu "v"
+            let value = -Infinity;
+            for (const child of children) {
+                // Rekursīvi izsaucam alphaBeta uz bērnu virsotnēm
+                value = Math.max(value, this.alphaBeta(child, depth - 1, alpha, beta, true));
+                alpha = Math.max(alpha, value); // atjauninām alpha vērtību
+                console.log(`Maximizer: ${value}, Alpha: ${alpha}, Beta: ${beta}`);
+                if (beta <= alpha) {
+                    // Ja beta ir mazāks vai vienāds ar alfa, pārtraucam ciklu
+                    console.log("Alpha cut-off");
+                    break;
+                }
+            }
+            return value;
+        }
+    }
+
+//Sergejs - nu it kā šitas alfabetočkas funkcionalitāti implementēju, arī kkā patestēju (izmantojot to piemēru lejā, ko izveidoja Artūrs, nomainot minimax uz alphaBeta), it kā viss iet un cut off strādā
+//Paliek uztaisīt iespēju izvēlēties algoritmu un kā uzrakstija Artūrs lai initialstate tiktu ņemts no random number ģeneratora
+    
 }
 
 const game = new NumberGame();
