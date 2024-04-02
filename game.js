@@ -5,9 +5,12 @@ const computerPointsElement = document.getElementById("computerPoints");
 
 class NumberGame {
     constructor() {
-      this.isHumanCurrentPlayer = true;
-      this.currentState = new State(0, 0, []);
+      this.humanPlayer = true;
+      this.currentState = new State(0, 0, []); 
       this.selectedParagraphIndex = null;
+      this.gameTree = null; 
+      this.previousState = new State(0, 0, []); 
+      this.alphabeta = false;
     }
 
     init() {
@@ -15,6 +18,7 @@ class NumberGame {
         while (arrayLength < 5 || arrayLength > 25 || isNaN(arrayLength)) { // pagaidām atstāju uz 5 - 25
             arrayLength = prompt("Izvēlieties skaitļu virknes garumu (5-25):");
         }
+        // this.currentState = new State(0, 0, [8, 3, 2, 5, 9]); // piemēra koks
         this.currentState = new State(0, 0, this.generateValues(arrayLength));
         this.startGame();
       }
@@ -36,6 +40,20 @@ class NumberGame {
     };
 
     async startGame() {
+        this.gameTree = new GameTree(this.initialState);
+
+        // !!! Lietotājam ir jābūt iespējai spēles sākumā mainīt šo vērtību 
+        this.humanPlayer = true;
+
+        // !!! Arī šo
+        this.alphabeta = true;
+
+        if (this.humanPlayer == true) {
+            this.gameTree.buildTree(this.currentState, 3, true);
+        } else {
+            this.gameTree.buildTree(this.currentState, 3, false);
+        }
+
         const self = this; // Nepieciešams lai realizētu skaitļa izvēli ar klikšķi
         while (this.currentState.values.length > 1) {
             let valueString = "";
@@ -56,16 +74,21 @@ class NumberGame {
                 });
             });
 
+
+
             // pagaidām spēli vienmēr iesāk spēlētājs
-            if (this.isHumanCurrentPlayer == true) {
+            if (this.humanPlayer == true) {
                 const { valueOne, valueTwo } = await this.playerMove();
-                this.currentState = State.computeState(this.currentState, valueOne, this.isHumanCurrentPlayer);
+                this.currentState = State.computeState(this.currentState, valueOne, this.humanPlayer);
+                this.previousState = this.currentState;
             } else {
-                let [valueOne, valueTwo] = this.computerMove();
-                this.currentState = State.computeState(this.currentState, valueOne, this.isHumanCurrentPlayer);
+                const { valueOne, valueTwo} = await this.computerMove();
+                this.currentState = State.computeState(this.previousState, valueOne, this.humanPlayer);
+                console.log(`value one is : ${valueOne}`);
+
             }
 
-            this.isHumanCurrentPlayer = !this.isHumanCurrentPlayer;
+            this.humanPlayer = !this.humanPlayer;
         }
         this.winner();
     }
@@ -99,70 +122,79 @@ class NumberGame {
         });
     }
     
-    // pagaidām dators izvēlas random skaitļus, ar kuriem veikt gājienu. Realitātē šeit jāimplementē minimax un alpha beta apruning
-    computerMove() {
-        let index = Math.floor(Math.random() * (this.currentState.values.length - 1));
-        return [index, index + 1];
-    }
+    
+    async computerMove() {
+        console.log("Computer move called");
+        if (this.alphabeta == false) {
+            const bestMove = this.gameTree.minimax(this.currentState, 3, true ); // te jātceras mainīt true un false atkarībā no tā, kurš sāk spēli
+            this.currentState = bestMove.node; // nomaina atrasto node ar labāko vērtējumu uz currentState
+            const valueOne = bestMove.node.firstNumAddr; // 
+            const valueTwo = valueOne + 1;
+
+            console.log(`Adding numbers at index ${valueOne} , ${valueTwo}, 
+                the values are: [${this.currentState.values[valueOne]}, ${this.currentState.values[valueTwo]}]`);
+            return {valueOne, valueTwo};
+        } else {
+        const bestMove = this.gameTree.alphabeta(this.currentState, 3, Number.NEGATIVE_INFINITY,  Number.POSITIVE_INFINITY, true); 
+        this.currentState = bestMove.node; // nomaina atrasto node ar labāko vērtējumu uz currentState
+        const valueOne = bestMove.node.firstNumAddr; 
+        const valueTwo = valueOne + 1;
+
+        console.log(`Adding numbers at index ${valueOne} , ${valueTwo}, 
+            their values: [${this.currentState.values[valueOne]}, ${this.currentState.values[valueTwo]}]`);
+        return {valueOne, valueTwo};
+        }
+    } 
 }
 
-//Klases State un GameTree ar visu no tām izrietošo saturu izmurgoja Ēriks Lijurovs
-// VAJAG SAVIENOT AR PĀRĒJO SPĒLI
-class State{    //Spēles stāvoklis
-    constructor(playerScore, computerScore, values){    //Sastāv no abu spēlētāju rezultātiem un skaitļu virknes
+class State {    //Spēles stāvoklis
+    constructor(playerScore, computerScore, values, firstNumAddr){    //Sastāv no abu spēlētāju rezultātiem un skaitļu virknes
         this.playerScore = playerScore;
         this.computerScore = computerScore;
         this.values = values;
+        this.firstNumAddr =firstNumAddr;
     }
 
-    static computeState(initialState, firstNumAddr, human){    //Stāvokļa aprēķināšanas metode
+    static computeState(initialState, firstNumAddr, human) {
+        console.log(`Computing new state. Index: ${firstNumAddr}, Human: ${human}`);
         let playerScore = initialState.playerScore;
         let computerScore = initialState.computerScore;
-        //SEKOJOŠAIS IR SLIKTS, NEĒRTS KODS, BET BEZ TĀ NEKAS NESTRĀDĀ
         const stringValues = initialState.values.toString(); //Pārveidojam skaitļu virkni no objekta par string
         const values = stringValues.split(',').map(Number);     //un atpakaļ
         //Kāpēc? Lai JS liek virkni adresē, kas NAV vecāka objekta virknes adrese. Citādi vecāka elementa virkne arī tiks mainīta.
-
-        if(values[firstNumAddr] + values[firstNumAddr+1] > 7){    //Punktu aprēķināšana
-            switch(human){
-                case true:
-                    playerScore += 2;
-                    break;
-                case false:
-                    computerScore += 2;
-                    break;
-            }
-            values.splice(firstNumAddr, 2, 1);  //Vērtību aizvietošana virknē no aizvietojamā pāra sākuma, 2 vērtības, ar 1
-
-        }else if(values[firstNumAddr] + values[firstNumAddr+1] < 7){
-            switch(human){
-                case true:
-                    computerScore -= 1;
-                    break;
-                case false:
-                    playerScore -= 1;
-                    break;
-            }
+        
+        console.log(`Initial values: ${values.join(', ')}`);
+        
+        const sum = values[firstNumAddr] + values[firstNumAddr + 1];
+        console.log(`Selected numbers: ${values[firstNumAddr]}, ${values[firstNumAddr + 1]} (Sum: ${sum})`);
+        
+        if (sum > 7) {
+            console.log(`${human ? 'Player' : 'Computer'} scores 2 points`);
+            values.splice(firstNumAddr, 2, 1);
+        } else if (sum < 7) {
+            console.log(`${human ? 'Player' : 'Computer'} loses 1 point`);
             values.splice(firstNumAddr, 2, 3);
-
-        }else{
-            switch(human){
-                case true:
-                    playerScore -= 1;
-                    break;
-                case false:
-                    computerScore -= 1;
-                    break;
-            }
+        } else if (sum == 7 ) {
+            console.log(`It's a draw. ${human ? 'Player' : 'Computer'} loses 1 point`);
             values.splice(firstNumAddr, 2, 2);
         }
-
-        const computedState = new State(playerScore, computerScore, values);  //Izveido jauno stāvokli
-        return computedState;   //Atgriež to
+        
+        playerScore += human ? (sum > 7 ? 2 : sum === 7 ? -1 : 0) : 0;
+        computerScore += !human ? (sum > 7 ? 2 : sum === 7 ? -1 : 0) : 0;
+        
+        const computedState = new State(playerScore, computerScore, values, firstNumAddr);
+        console.log(`New state: PlayerScore: ${playerScore}, ComputerScore: ${computerScore},  Index: ${firstNumAddr},  Values: ${values.join(', ')}`);
+        return computedState;
     }
+    
 
     static printState(State){
         console.log(State.playerScore + "|" + State.values + "|" + State.computerScore);
+    }
+
+    isTerminal() {
+        if (this.values.length == 1) return true;
+        else return false;
     }
 }
 
@@ -170,7 +202,7 @@ class GameTree{ //Spēles koks
     constructor(initialState){
         this.tree = new Map();    //Tā kā šis reāli ir grafs, katram stāvoklim var būt vairāki pēcteči
         this.tree.set(JSON.stringify(initialState), []);    //Spēles kokam key ir stāvoklis kā string, lai atvieglotu salīdzināšanu
-       
+        
        // this.evaluatedNodes = new Set(); // cheks prieks koka
        // this.tree.set(JSON.stringify(initialState), []);
     }
@@ -192,9 +224,6 @@ class GameTree{ //Spēles koks
         this.tree.get(from).splice(index, 1);  //Izņem loku no ar vecāka virsotni saistīto saraksta
     }
 
-    // ARTŪRS - nomainīju buildtree nedaudz jo minimaxam radās kļūda, atkārtojās virsotnes
-    // pievienoju checku kas parbauda vai jau ir apmeklets stavoklis un iznemu paths, izradas ka nav vajadzigs (hz bet strada)
-
     buildTree(initialState, depth, human, visited = new Set()) { //Spēles koka īstenā būvēšana + visited set
         const initialStateStr = JSON.stringify(initialState);
     
@@ -213,28 +242,6 @@ class GameTree{ //Spēles koks
             this.buildTree(childState, depth - 1, !human, visited); //Būvējam koku tālāk no šī pēcteča, apvēršam spēlētāja bool
         }
     }
-    
-    /* VECAIS BUILDTREE KODS (Atstasu katram gadijumam ja nu mans beigas izradas kludains)
-    buildTree(initialState, depth, human){ 
-        let paths = initialState.values.length - 1;  //Katram stāvoklim VIENMĒR būs virknes garums - 1 pēctecis
-        const initialStateStr = JSON.stringify(initialState);
-
-        if(this.tree.has(initialStateStr) === false){    //Ja vecāka virsotnes vēl nav kokā, ieliekam to
-            this.tree.set(initialStateStr, []);
-        }
-
-        if(paths == 0 || depth == 0){ //Ja esam koka galā, izejam no metodes
-            return;
-        }
-
-        for(let i=0; i<paths; i++){ //Katram stāvoklim ir paths pēcteči
-            const childState = State.computeState(initialState, i, human);    //Aprēķinam vienu (1) pēcteci sākuma stāvoklim
-            this.addPath(initialState, childState); //Pievienojam ceļu no sākotnējā stāvokļa uz pēctečiem BET NE OTRĀDI
-            this.buildTree(childState, depth-1, !human);  //Būvējam koku tālāk no šī pēcteča, apvēršam spēlētāja bool
-        }
-    }
-*/
-    //arturs schizo minimax algoritms
 
     printTree() {   //metode kas printē koka šī brīža state
         console.log("Game Tree:");  //virsraksts
@@ -247,125 +254,99 @@ class GameTree{ //Spēles koks
             console.log("---"); //linija prieks lasamibas
         }
     }
-
-    evaluateState(state) { //metode kas aprekina vai virsotne uzvar computer vai player
-        const scoreDifference = state.playerScore - state.computerScore;
-        if (scoreDifference > 0) {
-            return 1; // ja speletaja score - computer score > 0 tad uzvar speletajs un atgriez 1
-        } else if (scoreDifference < 0) {
-            return -1; // Ja speletaja score - computer score < 0 tad uzvar com un atgriez -1
-        } else {
-            return 0; // parejos gadijumos ir neizskirts un atgriez 0
-        }
-       
-    }
-
-    minimax(node, depth, isMinimizer) { //minimax algoritms ar virsotni, dzilumu un parbaudi vai ir minimizetajs
-
-        const nodeStr = JSON.stringify(node); //dabu string no virsotnes
-        const children = this.tree.get(JSON.stringify(node)); //dabujam apaksvirsotnes
-        
-        // ja ir apaksvirsotnes, tad ejam talak lidz beigam
-        if (children) {
-            for (const child of children) {
-                this.minimax(child, depth + 1, !isMinimizer); //ar katru soli pievienojam +1 dzilumam un nomainam minimizer statusu
-            }
-        }
-
-        // parbaudam, ja nav apaksvirsotnes tad sakam virsotnes novertesanu
-        if (!children || children.length === 0) {
-            // novertejam virsotni izmantojot ieprieks izveidoto evaluatestate
-            node.evaluation = this.evaluateState(node);
-            console.log("strupcela virsotne") //ta ka strupcela node, izvadam tekstu
-        } else {
-            //seit novertejam virsotni izmantojot tas apaksvirsotnes
-            if (isMinimizer) {
-                // ja atrodamies min limeni, tad izvelamies minimumu no apaksvirsotnem
-                node.evaluation = Math.min(...children.map(child => child.evaluation));
-                console.log("minimizer")
-            } else {
-                // ja atrodamies max limeni tad izvelamies maksimumu no apaksvirsotnem
-                node.evaluation = Math.max(...children.map(child => child.evaluation));
-                console.log("maximizer")
-            }
-        }
-
-        // izvadam sis virsotnes novertejumu
-        console.log(`Evaluation for state ${JSON.stringify(node)}: ${node.evaluation}`);
-    }
-
     
-    alphabeta(node, depth, alpha, beta, isMinimizer) {
+    evaluateState(state) { //metode kas aprekina vai virsotne uzvar computer vai player
+        if (state.computerScore > state.playerScore) {
+            return 1;
+        } else if (state.computerScore < state.playerScore) {
+            return -1;
+        } else return 0;
+    }
+
+    minimax(node, depth, isMaximizingPlayer) {
+        console.log("minimax called");
         const nodeStr = JSON.stringify(node);
         const children = this.tree.get(nodeStr);
     
-        // Ja nav bērnu vai tie ir beigu mezgli, novērtējam esošo stāvokli un beidzam rekursiju
-        if (!children || children.length === 0) {
-            node.evaluation = this.evaluateState(node);
-            console.log("Beigu mezgls");
-            console.log(`Evaluation for state ${JSON.stringify(node)}: ${node.evaluation}`);
-            return node.evaluation;
+        if (!children || children.length === 0 || depth === 0) {
+            const evaluation = this.evaluateState(node);
+            return { evaluation, node };
         }
     
-        // Minimizētājs
-        if (isMinimizer) {
-            let evaluation = Number.POSITIVE_INFINITY; // Sākam ar pozitīvo bezgalību, lai atrastu minimālo vērtību
-            // Pārskatam visus bērnus
-            for (const child of children) {
-                // Rekursīvi izsaucam alfabeta funkciju
-                evaluation = Math.min(evaluation, this.alphabeta(child, depth + 1, alpha, beta, false));
-                beta = Math.min(beta, evaluation); // Atjaunojam betas vērtību
-                if (beta <= alpha) { // Pārtraucam apstrādi, ja ir notikusi beta griezums
-                    console.log("Beta cut-off occurred");
-                    break;
-                }
-            }
-            node.evaluation = evaluation; // Saglabājam mezgla novērtējumu
-            console.log("Minimizer");
-            console.log(`Evaluation for state ${JSON.stringify(node)}: ${node.evaluation}`);
-            return evaluation;
-        } 
-        // Maksimizētājs
-        else {
-            let evaluation = Number.NEGATIVE_INFINITY; // Sākam ar negatīvo bezgalību, lai atrastu maksimālo vērtību
-            // Pārskatam visus bērnus
-            for (const child of children) {
-                // Rekursīvi izsaucam alfabeta funkciju
-                evaluation = Math.max(evaluation, this.alphabeta(child, depth + 1, alpha, beta, true));
-                alpha = Math.max(alpha, evaluation); // Atjaunojam alfas vērtību
-                if (beta <= alpha) { // Pārtraucam apstrādi, ja ir notikusi alfa griezums
-                    console.log("Alpha cut-off occurred");
-                    break;
-                }
-            }
-            node.evaluation = evaluation; // Saglabājam mezgla novērtējumu
-            console.log("Maximizer");
-            console.log(`Evaluation for state ${JSON.stringify(node)}: ${node.evaluation}`);
-            return evaluation;
+        let bestEvaluation = null;
+        let bestNode = null;
+        if (isMaximizingPlayer) {
+            bestEvaluation = Number.NEGATIVE_INFINITY;
+        } else {
+            bestEvaluation = Number.POSITIVE_INFINITY;
         }
+    
+        for (const child of children) {
+            const result = this.minimax(child, depth - 1, !isMaximizingPlayer);
+            if (isMaximizingPlayer) {
+                if (result.evaluation > bestEvaluation) {
+                    bestEvaluation = result.evaluation;
+                    bestNode = child;
+                }
+            } else { 
+                if (result.evaluation < bestEvaluation) {
+                    bestEvaluation = result.evaluation;
+                    bestNode = child;
+                }
+            }
+        }
+    
+
+        return { evaluation: bestEvaluation, node: bestNode };
     }
 
-//Sergejs - nu it kā šitas alfabetočkas funkcionalitāti implementēju, arī kkā patestēju (izmantojot to piemēru lejā, ko izveidoja Artūrs, nomainot minimax uz alphaBeta), it kā viss iet un cut off strādā
-//Paliek uztaisīt iespēju izvēlēties algoritmu un kā uzrakstija Artūrs lai initialstate tiktu ņemts no random number ģeneratora
     
+
+    alphabeta(node, depth, alpha, beta, isMaximizingPlayer) {
+        console.log("alpha beta called");
+        const nodeStr = JSON.stringify(node);
+        const children = this.tree.get(nodeStr) || [];
+    
+        if (depth === 0 || !children.length) {
+            const evaluation = this.evaluateState(node);
+            return {evaluation, node};
+        }
+    
+        let bestNode = null;
+    
+        if (isMaximizingPlayer) {
+            let value = Number.NEGATIVE_INFINITY;
+            for (const child of children) {
+                const result = this.alphabeta(child, depth - 1, alpha, beta, false);
+                if (result.evaluation > value) {
+                    value = result.evaluation;
+                    bestNode = child;
+                }
+                alpha = Math.max(alpha, value);
+                if (alpha >= beta) {
+                    break;
+                }
+            }
+            return {evaluation: value, node: bestNode};
+        } else {
+            let value = Number.POSITIVE_INFINITY;
+            for (const child of children) {
+                const result = this.alphabeta(child, depth - 1, alpha, beta, true);
+                if (result.evaluation < value) {
+                    value = result.evaluation;
+                    bestNode = child;
+                }
+                beta = Math.min(beta, value);
+                if (beta <= alpha) {
+                    break;
+                }
+            }
+            return {evaluation: value, node: bestNode};
+        }
+    }
+    
+
 }
 
 const game = new NumberGame();
 game.init();
-
-
-const initialState = new State(0, 0, [1, 2, 4, 1, 8]); // uztaisam piemera speles stavokli,
-//  izmantoju situaciju kuru uzzimeju uz lapas un pareizi noverteju, meginaju lai dators izdara tapat.
-// pec tam bus jaimplemente lai seit initialstate tiek nemts no taa random number generatora
-const depth = 4; // seit ir dzilums lidz kuram mes buvejam koku
-const human = true; // cilveks eksiste :)
-const gameTree = new GameTree(initialState); //taisam koku
-
-gameTree.buildTree(initialState, depth, human); // buvejam koku
-gameTree.printTree(); // printejam koku browsera konsole
-gameTree.minimax(initialState); //minimax algoritms tiek izsaukts
-
-//-Artūrs kaut kā esmu sataisijis to minimaxu tagad sergejs meginas uztaisit alfa beta un tad atliks implementet
-//lai stavoklis tiek generets randomā. Un tad hz ka bus jauztaisa lai dators iet pa -1 virsotnēm.
-//Paldies par uzmanibu es eju gulet, es vnk vairs nevaru
-//programmesana ir briesmiga
