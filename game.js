@@ -32,7 +32,7 @@ class NumberGame {
         return values;
     }
 
-    // Funkcija, kura do iespēju klikšķināt skaitļus, nevis rakstīt tos manuāli 
+    // Funkcija, kura dod iespēju klikšķināt skaitļus, nevis rakstīt tos manuāli 
     toggleP = (index) => {
         console.log("Clicked index:", index); // Šo var izdēst 
         document.getElementById("textField").value = index;
@@ -125,10 +125,11 @@ class NumberGame {
             document.getElementById("okButton").addEventListener("click", function() {
                 // Bišku pamainīju loģiku, lai strādātu ar skaitļu klikšķināšanu
                 console.log(`player clicked on index: ${index}`)
-                const valueOne = index !== null ? index : parseInt(document.getElementById("textField").value.trim());
-                const valueTwo = valueOne + 1;
+                let valueOne = index !== null ? parseInt(document.getElementById("textField").value.trim()) : parseInt(document.getElementById("textField").value.trim());
+                let valueTwo = valueOne + 1;
                 console.log(`player counts together values at indexes: ${valueOne}, ${valueTwo}`)
                 resolve({ valueOne, valueTwo });
+
             });
         });
     }
