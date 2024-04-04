@@ -261,3 +261,8 @@ hr{
 #arrayLength:focus{
     outline: 3px solid #776e65;
 }
+
+#start-game-labels{
+    font-size: 20px;
+    color: #756453;
+}

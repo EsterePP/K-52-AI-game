@@ -9,6 +9,15 @@
             <div class="start-game-div" id="start-game-div">
                 <h2 id="start-game-h2"> Izvēlieties skaitļu virknes garumu (5-25): </h2>
                 <input type="text" id="arrayLength"/>
+            
+                <h2 id="start-game-h2"> Izvēlieties, kādu algoritmu izmantos MI: </h2>
+                <form id="algorithmForm">
+                    <input type="radio" id="minimax" name="algorithm" value="minimax" checked>
+                    <label id="start-game-labels" for="minimax"> Minimax </label><br>
+                    <input type="radio" id="alphabeta" name="algorithm" value="alphabeta">
+                    <label id="start-game-labels" for="alphabeta"> Alpha-Beta </label><br>
+                </form>
+            
                 <h2 id="start-game-h2"> Izvēlieties, kas uzsāks spēli: </h2>
                 <div style="display: flex; flex-direction: row; gap: 15px;">
                     <button id="start-game-button" onclick="game.init(true); "> Jūs  </button>
@@ -27,11 +36,11 @@
 
                     <div class="right-container">
                         <div class="playerPoints-div">
-                            <p id="playerPoints-name">YOU</p>
+                            <p id="playerPoints-name">Jūs</p>
                             <p id="playerPoints">0</p>
                         </div>
                         <div class="computerPoints-div">
-                            <p id="computerPoints-name">AI</p>
+                            <p id="computerPoints-name">MI</p>
                             <p id="computerPoints">0</p>
                         </div>
                     </div>

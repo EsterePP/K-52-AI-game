@@ -9,7 +9,6 @@ class NumberGame {
       this.selectedParagraphIndex = null;
       this.gameTree = null; 
       this.previousState = new State(0, 0, []); 
-      this.alphabeta = false;
     }
 
     init(whoStarts) {
@@ -25,7 +24,32 @@ class NumberGame {
             this.currentState = new State(0, 0, [8, 3, 2, 5, 9] ); // piemēra koks
             // this.currentState = new State(0, 0, this.generateValues(arrayLength));
 
-            this.humanPlayer = whoStarts; // !!!!!!!!!!!!!! Šeit atgriežas true vai false, jāsataisa loģika lai dators pirmais uzsāktu spēli
+
+            // Pārbauda kurš alogirtms tika izvēlēts
+            var selectedAlgorithm = getSelectedAlgorithm();
+
+            function getSelectedAlgorithm() {
+                var algorithmForm = document.getElementById("algorithmForm");
+                var selectedAlgorithm = null;
+                
+                algorithmForm.querySelectorAll("input[name='algorithm']").forEach(function(radioButton) {
+                    // Pārbauda, kura opcija ir izvēlēta
+                    if (radioButton.checked) {
+                        selectedAlgorithm = radioButton.value;
+                    }
+                });
+                
+                return selectedAlgorithm;
+            }
+            // ja selectedAlgorithm != 'alphabeta', tad tiek izmantots minimax 
+            if(selectedAlgorithm == 'alphabeta'){
+                this.alphabeta = true;
+            } else{
+                this.alphabeta = false;
+            }
+
+            // !!!!!!!!!!!!!! Šeit atgriežas true vai false, jāsataisa loģika lai dators pirmais uzsāktu spēli
+            this.humanPlayer = whoStarts; 
 
             // Nodrošina lai spēle rādītos uz ekrāna
             var mainGameUI = document.querySelectorAll(".container");
