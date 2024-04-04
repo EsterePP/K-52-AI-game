@@ -5,7 +5,6 @@ const computerPointsElement = document.getElementById("computerPoints");
 
 class NumberGame {
     constructor() {
-      this.humanPlayer = true;
       this.currentState = new State(0, 0, []); 
       this.selectedParagraphIndex = null;
       this.gameTree = null; 
@@ -13,14 +12,34 @@ class NumberGame {
       this.alphabeta = false;
     }
 
-    init() {
-        let arrayLength = 0
-        while (arrayLength < 5 || arrayLength > 25 || isNaN(arrayLength)) { // pagaidām atstāju uz 5 - 25
-            arrayLength = prompt("Izvēlieties skaitļu virknes garumu (5-25):");
+    init(whoStarts) {
+        let arrayLength = 0;
+        arrayLength = document.getElementById("arrayLength").value;
+
+        if (arrayLength < 5 || arrayLength > 25 || isNaN(arrayLength)){}
+        else{
+            let arrayLength = 0
+
+            arrayLength = document.getElementById("arrayLength").value;
+
+            this.currentState = new State(0, 0, [8, 3, 2, 5, 9] ); // piemēra koks
+            // this.currentState = new State(0, 0, this.generateValues(arrayLength));
+
+            this.humanPlayer = whoStarts; // !!!!!!!!!!!!!! Šeit atgriežas true vai false, jāsataisa loģika lai dators pirmais uzsāktu spēli
+
+            // Nodrošina lai spēle rādītos uz ekrāna
+            var mainGameUI = document.querySelectorAll(".container");
+            mainGameUI.forEach(function(div) {
+                div.style.display = "flex";
+            });
+
+            // Nodrošina lai spēles parametru izvēle pazūd no ekrāna
+            var gameParameterSelector = document.getElementById("start-game-div");
+            gameParameterSelector.remove();
+
+            this.startGame();
         }
-        this.currentState = new State(0, 0, [8, 3, 2, 5, 9] ); // piemēra koks
-        // this.currentState = new State(0, 0, this.generateValues(arrayLength));
-        this.startGame();
+        
       }
     
     generateValues(arrayLength) {
@@ -99,7 +118,7 @@ class NumberGame {
     
             this.humanPlayer = !this.humanPlayer;
     
-                
+            // Nepieciešams lai izvadītu beigu stāvokli, nevis tikai spēles beigu rezultātu (Lai rādītos tikai 1 elements beigās, nevis 2(kā bija pirms tā))
             if (this.currentState.values.length === 1) {
                 let valueString = "";
                 playerPointsElement.innerHTML = this.currentState.playerScore;
@@ -404,4 +423,5 @@ class GameTree{ //Spēles koks
 }
 
 const game = new NumberGame();
-game.init();
+
+// game.init();

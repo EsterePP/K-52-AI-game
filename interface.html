@@ -6,6 +6,16 @@
     </head>
         <body>
 
+            <div class="start-game-div" id="start-game-div">
+                <h2 id="start-game-h2"> Izvēlieties skaitļu virknes garumu (5-25): </h2>
+                <input type="text" id="arrayLength"/>
+                <h2 id="start-game-h2"> Izvēlieties, kas uzsāks spēli: </h2>
+                <div style="display: flex; flex-direction: row; gap: 15px;">
+                    <button id="start-game-button" onclick="game.init(true); "> Jūs  </button>
+                    <button id="start-game-button" onclick="game.init(false); "> MI  </button>
+                </div>
+            </div>
+
             <div class="container">
                 <div class="top-container">
 

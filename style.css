@@ -60,7 +60,7 @@ hr{
 }
 
 .container{
-    display: flex;
+    display: none;
     flex-direction: column;
     margin: auto;
     width: 70%;
@@ -188,7 +188,7 @@ hr{
     outline: none !important;
 }
 
-#okButton {
+#okButton, #start-game-button {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -207,16 +207,16 @@ hr{
     cursor: pointer;
 }
 
-#okButton:hover{
+#okButton:hover, #start-game-button:hover{
     transition: ease-in-out 0.2s;
     background-color: #8f7a66e5;
 }
-#okButton:not(:hover){
+#okButton:not(:hover), #start-game-button:not(:hover){
     transition: ease-in-out 0.2s;
 }
    
    
-#okButton:active {
+#okButton:active, #start-game-button:active {
     box-shadow: none;
     transform: translateY(7px);
     transition: 35ms cubic-bezier(.5, .7, .4, 1);
@@ -226,4 +226,38 @@ hr{
     margin-left: auto;
     color: #8f7a66;
 }
-   
+
+
+/* ----- */
+
+.start-game-div{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: auto;
+    height: 80vh;
+}
+
+#start-game-button{
+    width: 150px;
+}
+
+#start-game-h2{
+    color: #776e65;
+    font-size: 26px;
+}
+
+#arrayLength{
+    border: none;
+    width: 250px;
+    height: 40px;
+    font-size: 24px;
+    text-align: center;
+    color: #756453;
+    box-shadow: rgba(0, 0, 0, 0.2) 0px 1px 4px 0px inset;
+}
+
+#arrayLength:focus{
+    outline: 3px solid #776e65;
+}
