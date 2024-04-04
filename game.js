@@ -18,8 +18,8 @@ class NumberGame {
         while (arrayLength < 5 || arrayLength > 25 || isNaN(arrayLength)) { // pagaidām atstāju uz 5 - 25
             arrayLength = prompt("Izvēlieties skaitļu virknes garumu (5-25):");
         }
-        // this.currentState = new State(0, 0, [8, 3, 2, 5, 9]); // piemēra koks
-        this.currentState = new State(0, 0, this.generateValues(arrayLength));
+        this.currentState = new State(0, 0, [8, 3, 2, 5, 9] ); // piemēra koks
+        // this.currentState = new State(0, 0, this.generateValues(arrayLength));
         this.startGame();
       }
     
@@ -40,18 +40,18 @@ class NumberGame {
     };
 
     async startGame() {
-        this.gameTree = new GameTree(this.initialState);
+        this.gameTree = new GameTree(this.currentState);
 
         // !!! Lietotājam ir jābūt iespējai spēles sākumā mainīt šo vērtību 
         this.humanPlayer = true;
 
         // !!! Arī šo
-        this.alphabeta = true;
+        this.alphabeta = false;
 
         if (this.humanPlayer == true) {
-            this.gameTree.buildTree(this.currentState, 3, true);
+            this.gameTree.buildTree(this.currentState, 4, true);
         } else {
-            this.gameTree.buildTree(this.currentState, 3, false);
+            this.gameTree.buildTree(this.currentState, 4, false);
         }
 
         const self = this; // Nepieciešams lai realizētu skaitļa izvēli ar klikšķi
@@ -68,6 +68,7 @@ class NumberGame {
             document.querySelectorAll('.virkneElement').forEach((paragraph, index) => {
                 paragraph.addEventListener('click', function() {
                     // Saglabājam kārtas numuru
+                    console.log(`index now: ${index}`);
                     self.selectedParagraphIndex = index;
                     // Izsauc toggleP() kad tiek uzklikšķināts
                     self.toggleP(index);
@@ -78,13 +79,20 @@ class NumberGame {
 
             // pagaidām spēli vienmēr iesāk spēlētājs
             if (this.humanPlayer == true) {
+                console.log(`game state before player makes a move : computer score : ${this.currentState.computerScore},
+                player score: ${this.currentState.playerScore}, values : ${this.currentState.values}`)
                 const { valueOne, valueTwo } = await this.playerMove();
                 this.currentState = State.computeState(this.currentState, valueOne, this.humanPlayer);
+                console.log(`game state after player makes a move : computer score: ${this.currentState.computerScore},
+                player score: ${this.currentState.playerScore}, values : ${this.currentState.values}`)
                 this.previousState = this.currentState;
             } else {
+                console.log(`game state before computer makes a move : computer score: ${this.currentState.computerScore},
+                player score: ${this.currentState.playerScore}, values : ${this.currentState.values}`)
                 const { valueOne, valueTwo} = await this.computerMove();
                 this.currentState = State.computeState(this.previousState, valueOne, this.humanPlayer);
-                console.log(`value one is : ${valueOne}`);
+                console.log(`game state after computer makes a move : computer score: ${this.currentState.computerScore},
+                player score: ${this.currentState.playerScore}, values : ${this.currentState.values}`);
 
             }
 
@@ -93,7 +101,6 @@ class NumberGame {
         this.winner();
     }
     
-
     winner() {
         playerPointsElement.innerHTML = this.currentState.playerScore;
         computerPointsElement.innerHTML = this.currentState.computerScore;
@@ -106,8 +113,10 @@ class NumberGame {
 
     async playerMove() {
         // Dabūn pieķļuvi pie selectedParagraphIndex un reseto to
+        console.log(`index when playermove called: ${this.selectedParagraphIndex}`);
         const index = this.selectedParagraphIndex;
         this.selectedParagraphIndex = null;
+        console.log(`index before clicking: ${this.selectedParagraphIndex}`);
 
         //pagaidām jāievada tikai pirmo elementu, valueTwo ir izvēlētais + 1
         outputElement.innerHTML = "Izvēlies savu skaitļu pāri!";
@@ -115,34 +124,37 @@ class NumberGame {
         return new Promise(resolve => {
             document.getElementById("okButton").addEventListener("click", function() {
                 // Bišku pamainīju loģiku, lai strādātu ar skaitļu klikšķināšanu
+                console.log(`player clicked on index: ${index}`)
                 const valueOne = index !== null ? index : parseInt(document.getElementById("textField").value.trim());
                 const valueTwo = valueOne + 1;
+                console.log(`player counts together values at indexes: ${valueOne}, ${valueTwo}`)
                 resolve({ valueOne, valueTwo });
             });
         });
     }
     
-    
     async computerMove() {
         console.log("Computer move called");
+        console.log(`game state when computer move is called : computer score ${this.currentState.computerScore},
+        player score: ${this.currentState.playerScore}, values : ${this.currentState.values}`)
         if (this.alphabeta == false) {
-            const bestMove = this.gameTree.minimax(this.currentState, 3, true ); // te jātceras mainīt true un false atkarībā no tā, kurš sāk spēli
+            const bestMove = this.gameTree.minimax(this.currentState, 4, true ); // te jātceras mainīt true un false atkarībā no tā, kurš sāk spēli
+            const bestMoveStr = JSON.stringify(bestMove);
+            console.log("---");
+            console.log(`game state recieved from minimax : computer score : ${bestMoveStr}`)
             this.currentState = bestMove.node; // nomaina atrasto node ar labāko vērtējumu uz currentState
             const valueOne = bestMove.node.firstNumAddr; // 
             const valueTwo = valueOne + 1;
-
-            console.log(`Adding numbers at index ${valueOne} , ${valueTwo}, 
-                the values are: [${this.currentState.values[valueOne]}, ${this.currentState.values[valueTwo]}]`);
             return {valueOne, valueTwo};
         } else {
-        const bestMove = this.gameTree.alphabeta(this.currentState, 3, Number.NEGATIVE_INFINITY,  Number.POSITIVE_INFINITY, true); 
-        this.currentState = bestMove.node; // nomaina atrasto node ar labāko vērtējumu uz currentState
-        const valueOne = bestMove.node.firstNumAddr; 
-        const valueTwo = valueOne + 1;
-
-        console.log(`Adding numbers at index ${valueOne} , ${valueTwo}, 
-            their values: [${this.currentState.values[valueOne]}, ${this.currentState.values[valueTwo]}]`);
-        return {valueOne, valueTwo};
+            const bestMove = this.gameTree.alphabeta(this.currentState, 3, Number.NEGATIVE_INFINITY,  Number.POSITIVE_INFINITY, true); 
+            this.currentState = bestMove.node; // nomaina atrasto node ar labāko vērtējumu uz currentState
+            console.log("---");
+            console.log(`game state recieved from alpha beta : computer score : ${this.bestMove.computerScore},
+            player score: ${this.bestMove.playerScore}, values : ${this.bestMove.values}`)
+            const valueOne = bestMove.node.firstNumAddr; 
+            const valueTwo = valueOne + 1;
+            return {valueOne, valueTwo};
         }
     } 
 }
@@ -163,38 +175,33 @@ class State {    //Spēles stāvoklis
         const values = stringValues.split(',').map(Number);     //un atpakaļ
         //Kāpēc? Lai JS liek virkni adresē, kas NAV vecāka objekta virknes adrese. Citādi vecāka elementa virkne arī tiks mainīta.
         
-        console.log(`Initial values: ${values.join(', ')}`);
+        // console.log(`Initial values: ${values.join(', ')}`);
         
         const sum = values[firstNumAddr] + values[firstNumAddr + 1];
-        console.log(`Selected numbers: ${values[firstNumAddr]}, ${values[firstNumAddr + 1]} (Sum: ${sum})`);
+        // console.log(`Selected numbers: ${values[firstNumAddr]}, ${values[firstNumAddr + 1]} (Sum: ${sum})`);
         
         if (sum > 7) {
-            console.log(`${human ? 'Player' : 'Computer'} scores 2 points`);
+            // console.log(`${human ? 'Player' : 'Computer'} scores 2 points`);
             values.splice(firstNumAddr, 2, 1);
         } else if (sum < 7) {
-            console.log(`${human ? 'Player' : 'Computer'} loses 1 point`);
+            // console.log(`${human ? 'Player' : 'Computer'} loses 1 point`);
             values.splice(firstNumAddr, 2, 3);
         } else if (sum == 7 ) {
-            console.log(`It's a draw. ${human ? 'Player' : 'Computer'} loses 1 point`);
+            //console.log(`It's a draw. ${human ? 'Player' : 'Computer'} loses 1 point`);
             values.splice(firstNumAddr, 2, 2);
         }
         
-        playerScore += human ? (sum > 7 ? 2 : sum === 7 ? -1 : 0) : 0;
-        computerScore += !human ? (sum > 7 ? 2 : sum === 7 ? -1 : 0) : 0;
+        playerScore += human? (sum>7 ? 2: sum === 7? -1: 0) :(sum<8 ? -1: 0)
+        computerScore += !human? (sum>7 ? 2: sum === 7? -1: 0) :(sum<8 ? -1: 0)
         
         const computedState = new State(playerScore, computerScore, values, firstNumAddr);
-        console.log(`New state: PlayerScore: ${playerScore}, ComputerScore: ${computerScore},  Index: ${firstNumAddr},  Values: ${values.join(', ')}`);
+        // console.log(`New state: PlayerScore: ${playerScore}, ComputerScore: ${computerScore},  Index: ${firstNumAddr},  Values: ${values.join(', ')}`);
         return computedState;
     }
     
 
     static printState(State){
-        console.log(State.playerScore + "|" + State.values + "|" + State.computerScore);
-    }
-
-    isTerminal() {
-        if (this.values.length == 1) return true;
-        else return false;
+        // console.log(State.playerScore + "|" + State.values + "|" + State.computerScore);
     }
 }
 
@@ -243,33 +250,62 @@ class GameTree{ //Spēles koks
         }
     }
 
-    printTree() {   //metode kas printē koka šī brīža state
-        console.log("Game Tree:");  //virsraksts
-        for (const [stateStr, children] of this.tree) {  
-            console.log(`State: ${stateStr}`);  //uzraksta speletaju punktus un si briza skaitlu virkni
-            console.log("Children:");
-            for (const child of children) {
-                console.log(JSON.stringify(child)); //uzraksta apaks virsotnes (children)
-            }
-            console.log("---"); //linija prieks lasamibas
-        }
-    }
+    // printTree() {   //metode kas printē koka šī brīža state
+    //     console.log("Game Tree:");  //virsraksts
+    //     for (const [stateStr, children] of this.tree) {  
+    //         console.log(`State: ${stateStr}`);  //uzraksta speletaju punktus un si briza skaitlu virkni
+    //         console.log("Children:");
+    //         for (const child of children) {
+    //             console.log(JSON.stringify(child)); //uzraksta apaks virsotnes (children)
+    //         }
+    //         console.log("---"); //linija prieks lasamibas
+    //     }
+    // }
     
-    evaluateState(state) { //metode kas aprekina vai virsotne uzvar computer vai player
+    evaluateState(state) {
+        let evaluation = 0;
+    
+        // labākie stāvokļi ir tie, kuros datoram ir augstāks punktu skaits
         if (state.computerScore > state.playerScore) {
-            return 1;
+            evaluation += 1;
         } else if (state.computerScore < state.playerScore) {
-            return -1;
-        } else return 0;
+            evaluation += -1;
+        } else evaluation += 0;
+
+        // labākie stāvokļi ir tie, kur ir vairāk par 1 pāri, kur sum > 7
+        // slikti ir tie, kur ir viens šāds pāris, jo tad spēlētājs to saskaitīs un iegūs 2 punktus sev
+        let pairSums = 0; 
+        for (let i = 0; i<state.values.length-1; i++) {
+            if (state.values[i] + state.values[i+1] > 7) {
+                pairSums += 1;
+            }
+        }
+        if (pairSums >= 2) {
+            evaluation +=1;
+        } else if (pairSums = 1) {
+            evaluation += -1;
+        } else evaluation += 0;
+       
+        return evaluation;
     }
 
     minimax(node, depth, isMaximizingPlayer) {
         console.log("minimax called");
         const nodeStr = JSON.stringify(node);
         const children = this.tree.get(nodeStr);
+
+        console.log("---");
+        console.log(`minimax is evaluating state : ${nodeStr}`)
     
+        // console.log(`it's children are : `)
+        // for (const child of children) {
+        //     const childStr = JSON.stringify(child);
+        //     console.log(`${childStr}; `);
+        // }
+
         if (!children || children.length === 0 || depth === 0) {
             const evaluation = this.evaluateState(node);
+            console.log(`computer will follow path with states evaluated : ${evaluation}`)
             return { evaluation, node };
         }
     
@@ -280,9 +316,15 @@ class GameTree{ //Spēles koks
         } else {
             bestEvaluation = Number.POSITIVE_INFINITY;
         }
+
+        console.log(`the best evaluation is currently : ${bestEvaluation}`);
+        const BestNodeStr = JSON.stringify(bestNode);
+        console.log(`the best state is currently : ${BestNodeStr}`);
     
         for (const child of children) {
+            const childStr = JSON.stringify(child);
             const result = this.minimax(child, depth - 1, !isMaximizingPlayer);
+            console.log(`called minimax on child : ${childStr}`);
             if (isMaximizingPlayer) {
                 if (result.evaluation > bestEvaluation) {
                     bestEvaluation = result.evaluation;
@@ -293,14 +335,11 @@ class GameTree{ //Spēles koks
                     bestEvaluation = result.evaluation;
                     bestNode = child;
                 }
-            }
+            } 
         }
-    
-
         return { evaluation: bestEvaluation, node: bestNode };
     }
 
-    
 
     alphabeta(node, depth, alpha, beta, isMaximizingPlayer) {
         console.log("alpha beta called");
