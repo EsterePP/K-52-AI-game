@@ -41,29 +41,32 @@ class NumberGame {
 
     async startGame() {
         this.gameTree = new GameTree(this.currentState);
-
+    
         // !!! Lietotājam ir jābūt iespējai spēles sākumā mainīt šo vērtību 
         this.humanPlayer = true;
-
+    
         // !!! Arī šo
         this.alphabeta = false;
-
+    
         if (this.humanPlayer == true) {
             this.gameTree.buildTree(this.currentState, 4, true);
         } else {
             this.gameTree.buildTree(this.currentState, 4, false);
         }
-
+    
         const self = this; // Nepieciešams lai realizētu skaitļa izvēli ar klikšķi
-        while (this.currentState.values.length > 1) {
+        while (this.currentState.values.length >= 1) {
             let valueString = "";
             playerPointsElement.innerHTML = this.currentState.playerScore;
             computerPointsElement.innerHTML = this.currentState.computerScore;
+            
+
+    
             for (let i = 0; i < this.currentState.values.length; i++) {
                 valueString += `<p tabindex='0' class='virkneElement e${i}' id='toggleNumber'>${this.currentState.values[i]}<span class=\"mini-font\"><i>${i}</i></span></p>`;
             }
             valuesArrayElement.innerHTML = valueString;
-
+    
             // Pievieno onClick funkcionalitāti skaitļiem, lai uzklikšķinot uz tiem, saglabājas index(jeb kārtas numurs)
             document.querySelectorAll('.virkneElement').forEach((paragraph, index) => {
                 paragraph.addEventListener('click', function() {
@@ -74,9 +77,7 @@ class NumberGame {
                     self.toggleP(index);
                 });
             });
-
-
-
+    
             // pagaidām spēli vienmēr iesāk spēlētājs
             if (this.humanPlayer == true) {
                 console.log(`game state before player makes a move : computer score : ${this.currentState.computerScore},
@@ -93,14 +94,28 @@ class NumberGame {
                 this.currentState = State.computeState(this.previousState, valueOne, this.humanPlayer);
                 console.log(`game state after computer makes a move : computer score: ${this.currentState.computerScore},
                 player score: ${this.currentState.playerScore}, values : ${this.currentState.values}`);
-
+    
             }
-
+    
             this.humanPlayer = !this.humanPlayer;
+    
+                
+            if (this.currentState.values.length === 1) {
+                let valueString = "";
+                playerPointsElement.innerHTML = this.currentState.playerScore;
+                computerPointsElement.innerHTML = this.currentState.computerScore;
+
+                for (let i = 0; i < this.currentState.values.length; i++) {
+                    valueString += `<p tabindex='0' class='virkneElement e${i}' id='toggleNumber'>${this.currentState.values[i]}<span class=\"mini-font\"><i>${i}</i></span></p>`;
+                }
+                valuesArrayElement.innerHTML = valueString;
+
+                break; 
+            }
         }
+        
         this.winner();
     }
-    
     winner() {
         playerPointsElement.innerHTML = this.currentState.playerScore;
         computerPointsElement.innerHTML = this.currentState.computerScore;
