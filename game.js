@@ -13,6 +13,17 @@ class NumberGame {
       this.previousState = new State(0, 0, []); 
     }
 
+    // Spēles restarts
+    restartGame(){
+        var mainGameUI = document.querySelectorAll(".container");
+        mainGameUI.forEach(function(div) {
+            div.style.display = "none";
+        });
+
+        var gameParameterSelector = document.getElementById("start-game-div");
+        gameParameterSelector.style.display = "flex";
+    };
+
     init(whoStarts) {
         let arrayLength = 0;
         arrayLength = document.getElementById("arrayLength").value;
@@ -59,7 +70,11 @@ class NumberGame {
 
             // Nodrošina lai spēles parametru izvēle pazūd no ekrāna
             var gameParameterSelector = document.getElementById("start-game-div");
-            gameParameterSelector.remove();
+            gameParameterSelector.style.display = "none";
+
+            // Paslēp restart pogu kad spēle tiek restartēta
+            var restartGameButton = document.getElementById("restart");
+            restartGameButton.style.display = "none";
 
             this.startGame();
         }
@@ -143,6 +158,11 @@ class NumberGame {
         }
         
         this.winner();
+
+        // Parāda spēles restarta pogu spēles beigās
+        var restartGameButton = document.getElementById("restart");
+        restartGameButton.style.display = "flex";
+
     }
     winner() {
         playerPointsElement.innerHTML = this.currentState.playerScore;
