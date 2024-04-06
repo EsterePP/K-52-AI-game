@@ -86,9 +86,17 @@ class NumberGame {
         this.gameTree = new GameTree(this.currentState);
     
         if (this.humanPlayer == true) {
-            this.gameTree.buildTree(this.currentState, 4, true);
+            if(this.currentState.values.length >= 19){
+                this.gameTree.buildTree(this.currentState, 4, true);
+            }else{
+                this.gameTree.buildTree(this.currentState, 5, true);
+            }
         } else {
-            this.gameTree.buildTree(this.currentState, 4, false);
+            if(this.currentState.values.length >= 19){
+                this.gameTree.buildTree(this.currentState, 4, true);
+            }else{
+                this.gameTree.buildTree(this.currentState, 5, true);
+            }
             this.previousState = this.currentState;
         }
     
@@ -118,6 +126,11 @@ class NumberGame {
             if (this.humanPlayer == true) {
                 const { valueOne, valueTwo } = await this.playerMove();
                 this.currentState = State.computeState(this.currentState, valueOne, this.humanPlayer);
+                if(this.currentState.values.length >= 19){
+                    this.gameTree.buildTree(this.currentState, 4, false);
+                }else{
+                    this.gameTree.buildTree(this.currentState, 5, false);
+                }
                 this.previousState = this.currentState;
             } else {
                 const { valueOne, valueTwo} = await this.computerMove();
@@ -242,13 +255,6 @@ class GameTree{ //Spēles koks
         }
     }
 
-    removePath(fromState, toState){ //Noņem loku no vecāka elementa uz bērna elementu ŠĪ FUNKCIJA NAV PĀRBAUDĪTA DARBĪBĀ
-        const from = JSON.stringify(fromState);
-        const to = JSON.stringify(toState);
-        const index = this.tree.get(from).findIndex((element) => JSON.stringify(element) == to);
-        this.tree.get(from).splice(index, 1);  //Izņem loku no ar vecāka virsotni saistīto saraksta
-    }
-
     buildTree(initialState, depth, human, visited = new Set()) { //Spēles koka īstenā būvēšana + visited set
         const initialStateStr = JSON.stringify(initialState);
     
@@ -256,9 +262,18 @@ class GameTree{ //Spēles koks
             this.tree.set(initialStateStr, []);
         }
     
-        if (visited.has(initialStateStr) || depth === 0) { //parbaudam vai state ir apskatits
+        if (depth === 0) { //parbaudam vai state ir apskatits
             return; 
         }
+
+        if (visited.has(initialStateStr)){
+            for(let i = 0; i < initialState.values.length - 1; i++){
+                const childState = State.computeState(initialState, i, human);
+                this.addPath(initialState, childState);
+                return;
+            }
+        }
+
         visited.add(initialStateStr); //ja nav bijis, tad pec apskatisanas pievienojam so setam ar apskatitajiem state
     
         for (let i = 0; i < initialState.values.length - 1; i++) {
