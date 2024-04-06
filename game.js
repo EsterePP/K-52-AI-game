@@ -13,14 +13,26 @@ class NumberGame {
       this.previousState = new State(0, 0, []); 
     }
 
+    // Spēles restarts
+    restartGame(){
+        // Paslēp galveno spēles daļu 
+        var mainGameUI = document.querySelectorAll(".container");
+        mainGameUI.forEach(function(div) {
+            div.style.display = "none";
+        });
+        // Parāda spēles parametrtu izvēli
+        var gameParameterSelector = document.getElementById("start-game-div");
+        gameParameterSelector.style.display = "flex";
+    };
+
     init(whoStarts) {
         let arrayLength = 0;
         arrayLength = document.getElementById("arrayLength").value;
 
+        // Pārbauda vai skaitļu virknes garums atbild prasībām
         if (arrayLength < 5 || arrayLength > 25 || isNaN(arrayLength)){}
         else{
             let arrayLength = 0
-
             arrayLength = document.getElementById("arrayLength").value;
 
             // this.currentState = new State(0, 0, [8, 3, 2, 5, 9] ); // test
@@ -28,7 +40,6 @@ class NumberGame {
 
             // Pārbauda kurš alogirtms tika izvēlēts
             var selectedAlgorithm = getSelectedAlgorithm();
-
             function getSelectedAlgorithm() {
                 var algorithmForm = document.getElementById("algorithmForm");
                 var selectedAlgorithm = null;
@@ -49,6 +60,7 @@ class NumberGame {
                 this.alphabeta = false;
             }
 
+            // Pārbauda, kurš uzsāks spēli (Spēlētājs vai MI)
             this.humanPlayer = whoStarts; 
 
             // Nodrošina lai spēle rādītos uz ekrāna
@@ -59,7 +71,11 @@ class NumberGame {
 
             // Nodrošina lai spēles parametru izvēle pazūd no ekrāna
             var gameParameterSelector = document.getElementById("start-game-div");
-            gameParameterSelector.remove();
+            gameParameterSelector.style.display = "none";
+
+            // Paslēp restart pogu kad spēle tiek restartēta
+            var restartGameButton = document.getElementById("restart");
+            restartGameButton.style.display = "none";
 
             this.startGame();
         }
@@ -107,10 +123,11 @@ class NumberGame {
             computerPointsElement.innerHTML = this.currentState.computerScore;
             
 
-    
+            // Veido skaitļu virkni ar atsevišķu <p></p> tagu katram skaitlim
             for (let i = 0; i < this.currentState.values.length; i++) {
                 valueString += `<p tabindex='0' class='virkneElement e${i}' id='toggleNumber'>${this.currentState.values[i]}<span class=\"mini-font\"><i>${i}</i></span></p>`;
             }
+            // Ievieto skaitļu virkni 
             valuesArrayElement.innerHTML = valueString;
     
             // Pievieno onClick funkcionalitāti skaitļiem, lai uzklikšķinot uz tiem, saglabājas index(jeb kārtas numurs)
@@ -150,12 +167,17 @@ class NumberGame {
                     valueString += `<p tabindex='0' class='virkneElement e${i}' id='toggleNumber'>${this.currentState.values[i]}<span class=\"mini-font\"><i>${i}</i></span></p>`;
                 }
                 valuesArrayElement.innerHTML = valueString;
-
+                // Apstādina ciklu pēc tā, kad spēle beidzās, un tika izvadīt gala stāvoklis
                 break; 
             }
         }
         
         this.winner();
+
+        // Parāda spēles restarta pogu spēles beigās
+        var restartGameButton = document.getElementById("restart");
+        restartGameButton.style.display = "flex";
+
     }
     winner() {
         playerPointsElement.innerHTML = this.currentState.playerScore;
@@ -177,7 +199,7 @@ class NumberGame {
 
         return new Promise(resolve => {
             document.getElementById("okButton").addEventListener("click", function() {
-                // Bišku pamainīju loģiku, lai strādātu ar skaitļu klikšķināšanu
+                // Nosaka kuru skaitļu pāri izvēlējās spēlētājs
                 let valueOne = index !== null ? parseInt(document.getElementById("textField").value.trim()) : parseInt(document.getElementById("textField").value.trim());
                 let valueTwo = valueOne + 1;
                 resolve({ valueOne, valueTwo });
