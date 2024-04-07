@@ -210,7 +210,7 @@ class NumberGame {
     
     async computerMove() {
         if (this.alphabeta == false) {
-            const bestMove = this.gameTree.minimax(this.currentState, 4, !this.humanPlayer);
+            const bestMove = this.gameTree.minimax(this.currentState, 2, !this.humanPlayer);
             this.currentState = bestMove.node; // nomaina atrasto node ar labāko vērtējumu uz currentState
             const valueOne = bestMove.node.firstNumAddr; // 
             const valueTwo = valueOne + 1;
@@ -284,16 +284,8 @@ class GameTree{ //Spēles koks
             this.tree.set(initialStateStr, []);
         }
     
-        if (depth === 0) { //parbaudam vai state ir apskatits
+        if (depth === 0 || visited.has(initialStateStr)) { //parbaudam vai state ir apskatits
             return; 
-        }
-
-        if (visited.has(initialStateStr)){
-            for(let i = 0; i < initialState.values.length - 1; i++){
-                const childState = State.computeState(initialState, i, human);
-                this.addPath(initialState, childState);
-                return;
-            }
         }
 
         visited.add(initialStateStr); //ja nav bijis, tad pec apskatisanas pievienojam so setam ar apskatitajiem state
