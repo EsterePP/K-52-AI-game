@@ -32,7 +32,7 @@ class NumberGame {
         arrayLength = document.getElementById("arrayLength").value;
 
         // Pārbauda vai skaitļu virknes garums atbild prasībām
-        if (arrayLength < 5 || arrayLength > 25 || isNaN(arrayLength)){}
+        if (arrayLength < 15 || arrayLength > 25 || isNaN(arrayLength)){}
         else{
             let arrayLength = 0
             arrayLength = document.getElementById("arrayLength").value;
