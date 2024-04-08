@@ -23,6 +23,8 @@ class NumberGame {
         // Parāda spēles parametrtu izvēli
         var gameParameterSelector = document.getElementById("start-game-div");
         gameParameterSelector.style.display = "flex";
+        //Nodzēš pēdējā izvelētā gājiena indeksu
+        document.getElementById("textField").value = null;
     };
 
     init(whoStarts) {
@@ -167,11 +169,12 @@ class NumberGame {
                     valueString += `<p tabindex='0' class='virkneElement e${i}' id='toggleNumber'>${this.currentState.values[i]}<span class=\"mini-font\"><i>${i}</i></span></p>`;
                 }
                 valuesArrayElement.innerHTML = valueString;
-                // Apstādina ciklu pēc tā, kad spēle beidzās, un tika izvadīt gala stāvoklis
+                // Apstādina ciklu pēc tā, kad spēle beidzās, un tika izvadīts gala stāvoklis
                 break; 
             }
         }
         
+        // Izsauc spēles beigu metodi, kas paziņo spēles iznākumu
         this.winner();
 
         // Parāda spēles restarta pogu spēles beigās
@@ -179,7 +182,7 @@ class NumberGame {
         restartGameButton.style.display = "flex";
 
     }
-    winner() {
+    winner() { // Izvada spēles iznākuma (uzvara/zaudējums/neizšķirts) paziņojumu
         playerPointsElement.innerHTML = this.currentState.playerScore;
         computerPointsElement.innerHTML = this.currentState.computerScore;
         if (this.currentState.playerScore > this.currentState.computerScore) {
@@ -233,6 +236,7 @@ class State {    //Spēles stāvoklis
         this.firstNumAddr =firstNumAddr;
     }
 
+    // Funkcija spēles stāvokļa (State) aprēķināšanai
     static computeState(initialState, firstNumAddr, human) {
         let playerScore = initialState.playerScore;
         let computerScore = initialState.computerScore;
@@ -240,8 +244,10 @@ class State {    //Spēles stāvoklis
         const values = stringValues.split(',').map(Number);     //un atpakaļ
         //Kāpēc? Lai JS liek virkni adresē, kas NAV vecāka objekta virknes adrese. Citādi vecāka elementa virkne arī tiks mainīta.
         
+        // Gājienā izvēlēto indeksu summa
         const sum = values[firstNumAddr] + values[firstNumAddr + 1];
         
+        // Attiecīgi dotajai spēles loģikai, aizvieto izvēlēto skaitļu pāri ar 1 / 2 / 3
         if (sum > 7) {
             values.splice(firstNumAddr, 2, 1);
         } else if (sum < 7) {
@@ -250,9 +256,11 @@ class State {    //Spēles stāvoklis
             values.splice(firstNumAddr, 2, 2);
         }
         
+        // Aprēķina spēlētāju punktu izmaiņas pēc veiktā gājiena
         playerScore += human? (sum>7 ? 2: sum === 7? -1: 0) :(sum<8 ? -1: 0)
         computerScore += !human? (sum>7 ? 2: sum === 7? -1: 0) :(sum<8 ? -1: 0)
         
+        // Atgriež jauno State
         const computedState = new State(playerScore, computerScore, values, firstNumAddr);
         return computedState;
     }
@@ -416,5 +424,4 @@ class GameTree{ //Spēles koks
 }
 
 const game = new NumberGame();
-
 
