@@ -347,31 +347,46 @@ class GameTree{ //Spēles koka klase
     }
 
 
+    //minimaksa algoritms. To izsauc ar 3 parametriem:
+    //Node, kas ir šī brīža apskatāmā virsotne,
+    //depth - dziļums - cik dziļi pārmeklēt koku, 
+    //isMaximizingPlayer, kas ir atkarīgs no tā, vai atrodamies maksimizētāja līmenī vai nē.
     minimax(node, depth, isMaximizingPlayer) {
-        const nodeStr = JSON.stringify(node);
-        const children = this.tree.get(nodeStr);
+        const nodeStr = JSON.stringify(node);   //pārveido šī brīža virsotni par string vērtību
+        const children = this.tree.get(nodeStr);   //iegūst virsotnes pēctečus
 
+        //Pārbaudām, vai virsotnei ir pēcteči. Ja to nav, tas nozīmē, ka esam strupceļa virsotnē,
+        //tādā gadījumā algoritms novērtē virsotni, izsaucot evaluateState metodi
         if (!children || children.length === 0 || depth === 0) {
             const evaluation = this.evaluateState(node);
-            return { evaluation, node };
+            return { evaluation, node };    //atgriež novērtējumu un virsotni
         }
-    
-        let bestEvaluation = null;
+        
+        let bestEvaluation = null; //inicializējam mainīgos, kas atbilst labākajām virsotnēm
         let bestNode = null;
+        //Ja spēlētājs ir maksimizētājs, tad mainīgajam bestEvaluation piešķir 
+        // - bezgalību, ja nav maksimizētājs, tad + bezgalību.
         if (isMaximizingPlayer) {
             bestEvaluation = Number.NEGATIVE_INFINITY;
         } else {
             bestEvaluation = Number.POSITIVE_INFINITY;
         }
-    
+        
+        //Šajā ciklā tiek pārbaudītas visas virsotnes un katrai izsaukta minimax novērtēšana, lai piešķirtu vērtību 
         for (const child of children) {
-            const childStr = JSON.stringify(child);
-            const result = this.minimax(child, depth - 1, !isMaximizingPlayer,);
+            const childStr = JSON.stringify(child); //pārveido pēctečus string vērtībā
+            //ejot cauri katrai virsotnei, sākot no strupceļa, tiek izsaukta augstāk rakstītā minimax novērtēšanas metode,
+            //tai tiek padota šī brīža virsotne (child), 
+            //parametrs (depth -1), lai ar katru iterāciju doties augstāk kokā, un
+            //(!ismaximizingPlayer) nomaina maksimizētāja vērtību katrā līmenī.
+            const result = this.minimax(child, depth - 1, !isMaximizingPlayer,); 
+            //Gadījumā, ja esam max līmenī, un šī brīža virsotnes vērtējums ir lielāks par iepriekš iegūto:
             if (isMaximizingPlayer) {
                 if (result.evaluation > bestEvaluation) {
-                    bestEvaluation = result.evaluation;
-                    bestNode = child;
+                    bestEvaluation = result.evaluation;  //tad piešķiram jauno vērtību bestEvaluation mainīgajam
+                    bestNode = child;   //šī virsotne kļūst par labāko
                 }
+            //Ja neesam max līmenī, esam min. Notiek tieši tas pats process, tikai labākā virsotne ir ar mazāko vērtību
             } else { 
                 if (result.evaluation < bestEvaluation) {
                     bestEvaluation = result.evaluation;
@@ -379,7 +394,7 @@ class GameTree{ //Spēles koka klase
                 }
             } 
         }
-        return { evaluation: bestEvaluation, node: bestNode };
+        return { evaluation: bestEvaluation, node: bestNode };  //tiek atgriezts labākās virsotnes novērtējums un pati virsotne
     }
 
 
