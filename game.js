@@ -401,31 +401,31 @@ class GameTree{ //Spēles koka klase
     //node - apskatāma virsotne;
     //depth - koka pārmeklēšanas dziļums;
     //alpha,beta - alpha un beta vērtības;
-    //isMaximizingPlayer (true/false) - nosaka, vai šobrīd ir maksimizētāja vai minimizētāja gājiens.
-    alphabeta(node, depth, alpha, beta, isMaximizingPlayer) { 
+    //maximizingPlayer (true/false) - nosaka, vai šobrīd ir maksimizētāja vai minimizētāja gājiens.
+    alphabeta(node, depth, alpha, beta, maximizingPlayer) { 
         const nodeStr = JSON.stringify(node);
         const children = this.tree.get(nodeStr) || [];
     
         //Tiek pārbaudīts, vai ir sasniegta strupceļa virsorne. Ja ir, tad algoritms novērtē to ar evaluateState metodi 
         if (depth === 0 || !children.length) {
-            const evaluation = this.evaluateState(node);
-            return {evaluation, node};
+            const heuristicValue = this.evaluateState(node);
+            return {heuristicValue, node};
         }
     
-        let bestNode = null; //Tiek inicializēts labākās virsotnes mainīgais
+        let bestState = null; //Tiek inicializēts labākās virsotnes mainīgais
     
-        if (isMaximizingPlayer) { //Maksimizētāja gājiens
+        if (maximizingPlayer) { //Maksimizētāja gājiens
             let value = Number.NEGATIVE_INFINITY;
             for (const child of children) {   //Cikls pārskata katru virsotni, sākot ar strupceļa virsorni, un izsauc katrai alfabeta novērtēšanu;
 
                 // Virsotnei tiek rekursīvi izsaukta alfabeta novērtēšana. 
-                // Dziļums samazinās par -1 (lai doties augstāk kokā), isMaximizingPlayer kļūst par false (minimizētāja gājiens):
-                const result = this.alphabeta(child, depth - 1, alpha, beta, false); 
+                // Dziļums samazinās par -1 (lai doties augstāk kokā), maximizingPlayer kļūst par false (minimizētāja gājiens):
+                const currentEvaluation = this.alphabeta(child, depth - 1, alpha, beta, false); 
 
                 //Ja virsotnes novērtējums ir lielāks par līdzšinējo vērtību, tā tiek atjaunināta:
-                if (result.evaluation > value) {  
-                    value = result.evaluation;
-                    bestNode = child; 
+                if (currentEvaluation.heuristicValue > value) {  
+                    value = currentEvaluation.heuristicValue;
+                    bestState = child; 
                     
                 }
                 //Tiek salīdzinātas alfa vērtība un apskatamas virsotnes novērtējums,
@@ -435,7 +435,7 @@ class GameTree{ //Spēles koka klase
                     break; 
                 }
             }
-            return {evaluation: value, node: bestNode}; // Tiek atgriezta informācija par labāko virsotni un to novērtējumu
+            return {heuristicValue: value, node: bestState}; // Tiek atgriezta informācija par labāko virsotni un to novērtējumu
 
 
 
@@ -445,13 +445,13 @@ class GameTree{ //Spēles koka klase
             for (const child of children) { //Cikls pārskata katru virsotni, sākot ar strupceļa virsorni, un izsauc katrai alfabeta novērtēšanu;
                 
                 // Virsotnei tiek rekursīvi izsaukta alfabeta novērtēšana. 
-                // Dziļums samazinās par -1 (lai doties augstāk kokā), isMaximizingPlayer kļūst par true (maksimizētāja gājiens):
-                const result = this.alphabeta(child, depth - 1, alpha, beta, true);
+                // Dziļums samazinās par -1 (lai doties augstāk kokā), maximizingPlayer kļūst par true (maksimizētāja gājiens):
+                const currentEvaluation = this.alphabeta(child, depth - 1, alpha, beta, true);
 
                 //Ja virsotnes novērtējums ir mazāks par līdzšinējo vērtību, tā tiek atjaunināta:
-                if (result.evaluation < value) { 
-                    value = result.evaluation;
-                    bestNode = child;
+                if (currentEvaluation.heuristicValue < value) { 
+                    value = currentEvaluation.heuristicValue;
+                    bestState = child;
                 }
 
                 //Tiek salīdzinātas beta vērtība un apskatamas virsotnes novērtējums,
@@ -463,9 +463,10 @@ class GameTree{ //Spēles koka klase
             }
 
             
-            return {evaluation: value, node: bestNode}; // Tiek atgriezta informācija par labāko virsotni un to novērtējumu
+            return {heuristicValue: value, node: bestState}; // Tiek atgriezta informācija par labāko virsotni un to novērtējumu
         }
     }
+    
     
 }
 
