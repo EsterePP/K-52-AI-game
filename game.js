@@ -228,12 +228,12 @@ class NumberGame {
     } 
 }
 
-class State {    //Spēles stāvoklis
-    constructor(playerScore, computerScore, values, firstNumAddr){    //Sastāv no abu spēlētāju rezultātiem un skaitļu virknes
-        this.playerScore = playerScore;
-        this.computerScore = computerScore;
-        this.values = values;
-        this.firstNumAddr =firstNumAddr;
+class State {    //Spēles stāvokļa klase
+    constructor(playerScore, computerScore, values, firstNumAddr){    //Stāvokļa objekts sastāv no
+        this.playerScore = playerScore;     //cilvēka spēlētāja rezultātiem,
+        this.computerScore = computerScore; //MI spēlētāja rezultātiem,
+        this.values = values;               //ciparu virknes,
+        this.firstNumAddr =firstNumAddr;    //izvēlēto ciparu pāra pirmā cipara adreses
     }
 
     // Funkcija spēles stāvokļa (State) aprēķināšanai
@@ -266,41 +266,43 @@ class State {    //Spēles stāvoklis
     }
 }
 
-class GameTree{ //Spēles koks
-    constructor(initialState){
-        this.tree = new Map();    //Tā kā šis reāli ir grafs, katram stāvoklim var būt vairāki pēcteči
+class GameTree{ //Spēles koka klase
+    constructor(initialState){    //Spēles koka konstruktoram tiek padota saknes virsotne
+        this.tree = new Map();    //Tā kā šis reāli ir grafs, katram stāvoklim var būt vairāki pēcteči, tāpēc izmanto Map ar value Array
         this.tree.set(JSON.stringify(initialState), []);    //Spēles kokam key ir stāvoklis kā string, lai atvieglotu salīdzināšanu
         
        // this.evaluatedNodes = new Set(); // cheks prieks koka
        // this.tree.set(JSON.stringify(initialState), []);
     }
 
-    addPath(fromState, toState){    //Loka pievienošanas funkcija grafā
+    //Loka pievienošanas funkcija grafā
+    addPath(fromState, toState){
         const from = JSON.stringify(fromState);
         
         if(this.tree.has(from)){    //Ja kokā ir vecāka virsotne
-            this.tree.get(from).push(toState); //Pievieno loku no vecāka virsotnes uz bērna virsotni
+            this.tree.get(from).push(toState); //Pievieno bērna virsotni vecāka virsotnes saistītajām virsotnēm
         }else{
-            console.log("Nav tada stavokla");
+            console.log("Nav tada stavokla");  //Atkļūdošanai
         }
     }
 
-    buildTree(initialState, depth, human, visited = new Set()) { //Spēles koka īstenā būvēšana + visited set
+    //Spēles koka būvēšanas no kāda stāvokļa funkcija
+    buildTree(initialState, depth, human, visited = new Set()) {
         const initialStateStr = JSON.stringify(initialState);
     
         if (this.tree.has(initialStateStr) === false) {   //Ja vecāka virsotnes vēl nav kokā, ieliekam to
             this.tree.set(initialStateStr, []);
         }
     
-        if (depth === 0 || visited.has(initialStateStr)) { //parbaudam vai state ir apskatits
-            return; 
+        if (depth === 0 || visited.has(initialStateStr)) { //Pārbaudam vai neesam koka galā un vai šis stāvoklis ir apskatits
+            return;     //Ja ir, tad pārtraucam būvēt koku
         }
 
-        visited.add(initialStateStr); //ja nav bijis, tad pec apskatisanas pievienojam so setam ar apskatitajiem state
+        visited.add(initialStateStr); //Ja nav bijis, tad pievienojam to setam ar apskatītajiem State
     
-        for (let i = 0; i < initialState.values.length - 1; i++) {
-            const childState = State.computeState(initialState, i, human); //Aprēķinam vienu (1) pēcteci sākuma stāvoklim
-            this.addPath(initialState, childState); //Pievienojam ceļu no sākotnējā stāvokļa uz pēctečiem BET NE OTRĀDI
+        for (let i = 0; i < initialState.values.length - 1; i++) {  //Ģenerējam šī stāvokļa visus tiešos pēctečus
+            const childState = State.computeState(initialState, i, human); //Aprēķinam vienu pēcteci sākuma stāvoklim
+            this.addPath(initialState, childState); //Pievienojam ceļu no sākotnējā stāvokļa uz šo pēcteci
             this.buildTree(childState, depth - 1, !human, visited); //Būvējam koku tālāk no šī pēcteča, apvēršam spēlētāja bool
         }
     }
