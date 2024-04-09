@@ -5,12 +5,13 @@ const outputElement = document.getElementById("systemOutput");
 const playerPointsElement = document.getElementById("playerPoints");
 const computerPointsElement = document.getElementById("computerPoints");
 
+// Spēles darbības loģika atrodas klasē game
 class NumberGame {
     constructor() {
-      this.currentState = new State(0, 0, []); 
-      this.selectedParagraphIndex = null;
-      this.gameTree = null; 
-      this.previousState = new State(0, 0, []); 
+      this.currentState = new State(0, 0, []); // Spēles pašreizējais stāvoklis
+      this.selectedParagraphIndex = null;  // Spēlētāja izvēlētā skaitļa indekss
+      this.gameTree = null; // Spēles koks
+      this.previousState = new State(0, 0, []); // Iepriekšējais spēles stāvoklis tiek glabāts, lai MI veitkais gājiens tiktu pareizi attēlots
     }
 
     // Spēles restarts
@@ -37,7 +38,7 @@ class NumberGame {
             let arrayLength = 0
             arrayLength = document.getElementById("arrayLength").value;
 
-            // this.currentState = new State(0, 0, [8, 3, 2, 5, 9] ); // test
+            // Par pašreizējo spēles stāvokli (spēles sākumstāvoklis) kļūst objekts State, kurā abu spēlētāju punkti ir 0 un atrodas skaitļu virkne, kas ģenerēta ar metodi generateValues)
             this.currentState = new State(0, 0, this.generateValues(arrayLength));
 
             // Pārbauda kurš alogirtms tika izvēlēts
@@ -84,6 +85,7 @@ class NumberGame {
         
       }
     
+    // Metode, kas atgriež masīvu "values" - spēles skaitļu virkni
     generateValues(arrayLength) {
         let values = [];
         for (let i = 0; i < arrayLength; i++) {
@@ -99,10 +101,12 @@ class NumberGame {
         return index;
     };
 
+     // Spēles sākums
     async startGame() {
-        console.log("game started");
+         // Tiek izveidots jauns GameTree objekts ar pašreizējo spēles stāvokli
         this.gameTree = new GameTree(this.currentState);
     
+         // Atkarībā no izvēlētā virknes garuma tiek uzsākta spēles koka veidošana dažādos dziļumos
         if (this.humanPlayer == true) {
             if(this.currentState.values.length >= 19){
                 this.gameTree.buildTree(this.currentState, 4, true);
@@ -115,16 +119,18 @@ class NumberGame {
             }else{
                 this.gameTree.buildTree(this.currentState, 5, true);
             }
+            // Ja MI uzsāk spēli, tad pašreizējais (pirmais) spēles stāvoklis kļūst par iepriekšējo spēles stāvokli
+            // Šis ir nepieciešams, lai MI gājiena rezultātā izveidotos iecerētais stāvoklis (skat. computerMove)
             this.previousState = this.currentState;
         }
     
         const self = this; // Nepieciešams lai realizētu skaitļa izvēli ar klikšķi
+         // Spēles cikla sākums, spēle turpinās līdz 'values" masīvā ir vismaz 1 elements
         while (this.currentState.values.length >= 1) {
             let valueString = "";
             playerPointsElement.innerHTML = this.currentState.playerScore;
             computerPointsElement.innerHTML = this.currentState.computerScore;
             
-
             // Veido skaitļu virkni ar atsevišķu <p></p> tagu katram skaitlim
             for (let i = 0; i < this.currentState.values.length; i++) {
                 valueString += `<p tabindex='0' class='virkneElement e${i}' id='toggleNumber'>${this.currentState.values[i]}<span class=\"mini-font\"><i>${i}</i></span></p>`;
@@ -142,22 +148,30 @@ class NumberGame {
                 });
             });
     
+
             if (this.humanPlayer == true) {
-                const { valueOne, valueTwo } = await this.playerMove();
+                // Ja gājienu veic spēlētājs, tiek izsaukta playerMove metode
+                const { valueOne } = await this.playerMove();
+                 // Spēles stāvoklis tiek atjaunināts, balstoties uz spēlētāja izvēli (pirmā saskaitāmā skaitļa indeksu, kas tiek glabāts mainīgajā valueOne
                 this.currentState = State.computeState(this.currentState, valueOne, this.humanPlayer);
+                 // Spēles koks tiek veidots dziļāk, sākot no šī jauniegūtā spēles stāvokļa
                 if(this.currentState.values.length >= 19){
                     this.gameTree.buildTree(this.currentState, 4, false);
                 }else{
                     this.gameTree.buildTree(this.currentState, 5, false);
                 }
+                // Pirms MI gājiena pašreizējais stāvoklis tiek saglabāts kā iepriekšējais, jo arī MI izsauks computeState metodi, 
+                // tā pat kā playerMove - balstoties uz pirmā saskaitāmā skaitļa indeksu, kas jāzivēlas, lai sasniegtu vēlamo stāvokli -
+                // protams, indeksa izvēle attiecas uz stāvokli, kas tika izveidots cilvēka gājiena rezultātā (skat. computerMove)
                 this.previousState = this.currentState;
             } else {
-                const { valueOne, valueTwo} = await this.computerMove();
-                console.log(`current state passed to compute new state: ${this.currentState.values}`)
+                // Ja ir MI kārta veikt gājienu, izsaukta computerMove metode
+                const { valueOne } = await this.computerMove();
+                 // Tiek atjaunināts spēles stāvoklis, balstoties uz iegūto informāciju
                 this.currentState = State.computeState(this.previousState, valueOne, this.humanPlayer);
             }
     
-            this.humanPlayer = !this.humanPlayer;
+            this.humanPlayer = !this.humanPlayer; // Tiek nomainīts spēlētājs
     
             // Nepieciešams lai izvadītu beigu stāvokli, nevis tikai spēles beigu rezultātu (Lai rādītos tikai 1 elements beigās, nevis 2(kā bija pirms tā))
             if (this.currentState.values.length === 1) {
@@ -212,18 +226,20 @@ class NumberGame {
     }
     
     async computerMove() {
+        // Balstoties uz spēlētāja izvēli, tiek izsaukta minimaksa vai alfa-beta algoritms
         if (this.alphabeta == false) {
+            // Pašreizējam spēles stāvoklim tiek izsaukts minimax un iegūts labākais spēles stāvoklis
             const bestMove = this.gameTree.minimax(this.currentState, 2, !this.humanPlayer);
-            this.currentState = bestMove.node; // nomaina atrasto node ar labāko vērtējumu uz currentState
-            const valueOne = bestMove.node.firstNumAddr; // 
-            const valueTwo = valueOne + 1;
-            return {valueOne, valueTwo};
+            // Izmantojot informāciju par labāko spēles stāvokli, MI, tā pat kā cilvēks, veic gājienu balstoties uz pirmā saskaitāmā 
+            // skaitļa indeksu (State objekts vienmēr glabā šo informāciju)
+            const valueOne = bestMove.node.firstNumAddr;
+            return {valueOne};
         } else {
+            // Ja izvēlēts alfa-beta aloritms gājiena loģika ir tāda pati, tikai izsaukts attiecīgais algoritms
             const bestMove = this.gameTree.alphabeta(this.currentState, 3, Number.NEGATIVE_INFINITY,  Number.POSITIVE_INFINITY, !this.humanPlayer); 
             this.currentState = bestMove.node; // nomaina atrasto node ar labāko vērtējumu uz currentState
             const valueOne = bestMove.node.firstNumAddr; 
-            const valueTwo = valueOne + 1;
-            return {valueOne, valueTwo};
+            return {valueOne};
         }
     } 
 }
@@ -280,8 +296,6 @@ class GameTree{ //Spēles koks
         
         if(this.tree.has(from)){    //Ja kokā ir vecāka virsotne
             this.tree.get(from).push(toState); //Pievieno loku no vecāka virsotnes uz bērna virsotni
-        }else{
-            console.log("Nav tada stavokla");
         }
     }
 
@@ -305,18 +319,16 @@ class GameTree{ //Spēles koks
         }
     }
     
+    // Heiristiskā novērtēšana
     evaluateState(state) {
         let evaluation = 0;
     
-        // labākie stāvokļi ir tie, kuros datoram ir augstāks punktu skaits
-        if (state.computerScore > state.playerScore) {
-            evaluation += 1;
-        } else if (state.computerScore < state.playerScore) {
-            evaluation += -1;
-        } else evaluation += 0;
+        // Labākie stāvokļi ir tie, kuros MI un spēlētāja punktu skaita atšķirība ir lielāka (un pozitīva)
+        const scoreDifference = state.computerScore - state.playerScore;
+        evaluation += scoreDifference; 
 
-        // labākie stāvokļi ir tie, kur ir vairāk par 1 pāri, kur sum > 7
-        // slikti ir tie, kur ir viens šāds pāris, jo tad spēlētājs to saskaitīs un iegūs 2 punktus sev
+        // Labākie stāvokļi ir tie, kur ir vairāk par 1 pāri, kuru summa ir lielāka par 7
+        // Sliktāki ir tie stāvokļi, kur ir viens šāds pāris, jo tad spēlētājs to saskaitīs un iegūs 2 punktus sev, un MI vairs šādas iespējas nebūs
         let pairSums = 0; 
         for (let i = 0; i<state.values.length-1; i++) {
             if (state.values[i] + state.values[i+1] > 7) {
@@ -328,20 +340,14 @@ class GameTree{ //Spēles koks
         } else if (pairSums = 1) {
             evaluation += -1;
         } else evaluation += 0;
-       
+
         return evaluation;
     }
 
+
     minimax(node, depth, isMaximizingPlayer) {
-        console.log("minimax called");
         const nodeStr = JSON.stringify(node);
         const children = this.tree.get(nodeStr);
-    
-         console.log(`it's children are : `)
-         for (const child of children) {
-             const childStr = JSON.stringify(child);
-             console.log(`${childStr}; `);
-         }
 
         if (!children || children.length === 0 || depth === 0) {
             const evaluation = this.evaluateState(node);
@@ -355,8 +361,6 @@ class GameTree{ //Spēles koks
         } else {
             bestEvaluation = Number.POSITIVE_INFINITY;
         }
-
- 
     
         for (const child of children) {
             const childStr = JSON.stringify(child);
