@@ -398,47 +398,57 @@ class GameTree{ //Spēles koka klase
     }
 
 
-    alphabeta(node, depth, alpha, beta, isMaximizingPlayer) {
+    alphabeta(node, depth, alpha, beta, isMaximizingPlayer) { // Alfa-beta algoritms 
         const nodeStr = JSON.stringify(node);
         const children = this.tree.get(nodeStr) || [];
     
+        //Ja ir sasniegts dziļums 0 vai virsotne ir strupceļa virsorne, atgriežam novērtējumu
         if (depth === 0 || !children.length) {
             const evaluation = this.evaluateState(node);
             return {evaluation, node};
         }
     
-        let bestNode = null;
+        let bestNode = null; //Tiek inicializēta labākā virsotne
     
-        if (isMaximizingPlayer) {
+        if (isMaximizingPlayer) { //Maksimizētāja gājiens
             let value = Number.NEGATIVE_INFINITY;
-            for (const child of children) {
-                const result = this.alphabeta(child, depth - 1, alpha, beta, false);
-                if (result.evaluation > value) {
+            for (const child of children) {   //Cikls pārskata katru pēcteci;
+
+                // Pēctecis tiek rekursīvi izsaukts. Dziļums samazinās par -1, isMaximizingPlayer kļūst par false (minimizētāja gājiens):
+                const result = this.alphabeta(child, depth - 1, alpha, beta, false); 
+
+                //Ja pēcteča novērtējums ir lielāks par pašreizējo vērtību, vērtība tiek atjaunināta:
+                if (result.evaluation > value) {  
                     value = result.evaluation;
-                    bestNode = child;
+                    bestNode = child; 
+                    
                 }
-                alpha = Math.max(alpha, value);
-                if (alpha >= beta) {
-                    break;
+                alpha = Math.max(alpha, value); //Tiek atjaunināta alfa vērtība
+                if (alpha >= beta) { //Tiek veikta alfa vērtības pārbaude. 
+                    break; //Ja tā ir >= par beta, mēklēšana tiek pārtraukta (alfa nogriešana)
                 }
             }
-            return {evaluation: value, node: bestNode};
-        } else {
+            return {evaluation: value, node: bestNode}; // Tiek atgriezta informācija par labāko vērtību un virsotni
+
+        } else { //Minimizētāja gājiens
             let value = Number.POSITIVE_INFINITY;
-            for (const child of children) {
+            for (const child of children) { //Cikls pārskata katru pēcteci;
+                //Pēctecis tiek rekursīvi izsaukts. Dziļums samazinās par -1, isMaximizingPlayer kļūst par true (maksimizētāja gājiens):
                 const result = this.alphabeta(child, depth - 1, alpha, beta, true);
-                if (result.evaluation < value) {
+
+                //Ja pēcteča novērtējums ir mazāks par pašreizējo vērtību, vērtība tiek atjaunināta:
+                if (result.evaluation < value) { 
                     value = result.evaluation;
                     bestNode = child;
                 }
-                beta = Math.min(beta, value);
-                if (beta <= alpha) {
-                    break;
+                beta = Math.min(beta, value); //Tiek atjaunināta beta vērtība
+                if (beta <= alpha) {//Tiek veikta beta vērtības pārbaude. 
+                    break; //Ja tā ir <= par alfa, mēklēšana tiek pārtraukta (beta nogriešana)
                 }
             }
 
             
-            return {evaluation: value, node: bestNode};
+            return {evaluation: value, node: bestNode}; //Algoritms atgriež informāciju par labāko vērtību un virsotni
         }
     }
     
